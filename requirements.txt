@@ -6,3 +6,4 @@ streamlit-lottie
 requests
 streamlit-option-menu
 openai
+openai>=1.0.0
