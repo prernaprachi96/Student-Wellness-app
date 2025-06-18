@@ -70,17 +70,17 @@ st.markdown(
     body {{ background-color: {bg_color}; color: {text_color}; }}
     .stApp {{ background-color: {bg_color}; color: {text_color}; }}
     div[data-testid="stMetric"] {{
-        background-color: {card_bg}; 
-        color: {text_color}; 
-        border-radius: 8px; 
-        padding: 10px; 
+        background-color: {card_bg};
+        color: {text_color};
+        border-radius: 8px;
+        padding: 10px;
         margin-bottom: 10px;
     }}
     table {{ color: {text_color}; }}
-    button[kind="primary"] {{ 
-        background-color: {button_bg} !important; 
-        color: {button_text} !important; 
-        border: none !important; 
+    button[kind="primary"] {{
+        background-color: {button_bg} !important;
+        color: {button_text} !important;
+        border: none !important;
     }}
     button[kind="primary"]:hover {{
         background-color: #3700B3 !important;
@@ -104,7 +104,7 @@ st.markdown(
 )
 
 # Pages list - use exact strings everywhere
-pages = ["👤 User Info", "📊 Dashboard", "✨ Suggestions", "Chatbot" "📝 Feedback"]
+pages = ["👤 User Info", "📊 Dashboard", "✨ Suggestions", "📝 Feedback"]
 
 # Initialize session state for current page
 if 'page' not in st.session_state or st.session_state.page not in pages:
@@ -128,7 +128,7 @@ def go_next():
         st.session_state.page = pages[next_idx]
 
 # ========== Page 1: User Info ==========
-if st.session_state.current_page == "👤 User Info":
+if st.session_state.page == "👤 User Info":
     st.title("User Information")
     st.markdown("Please fill in your details to get started")
 
@@ -158,7 +158,7 @@ if st.session_state.current_page == "👤 User Info":
             st.warning("Please enter your name to continue.")
 
 # ========== Page 2: Dashboard ==========
-elif st.session_state.current_page == "📊 Dashboard":
+elif st.session_state.page == "📊 Dashboard":
     st.title("Mood Dashboard")
     st.write(f"Welcome, {st.session_state.get('name', 'User')}!")
     st.markdown("### ✏️ Write about your day")
@@ -351,65 +351,12 @@ elif st.session_state.page == "✨ Suggestions":
     if caption_text:
         st.caption(caption_text)
         
-    if st.button("Chat with Wellness Bot"):
-        go_next("Chtbot")
-
-
-
-
-
-
-
-#=========== Page 4: Chatbot ============
-if "current_page" not in st.session_state:
-    st.session_state.current_page = "Chatbot"  # Set chatbot as default start page
-
-
-def chatbot_page():
-    st.title("🧠 Chat with Your Wellness Buddy")
-    st.markdown("Feel free to talk about your day, stress, or anything on your mind 💬")
-    st.write("Hi there! I’m your friendly mood bot. Ask me anything or type 'exit' to leave the chat.")
-    
-
-    # Get mood score and convert to mood label
-    score = st.session_state.mood_score
-    mood = "positive" if score > 0.3 else "negative" if score < -0.3 else "neutral"
-
-    # Initialize message history
-    if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "system", "content": f"You are a kind and understanding mental wellness coach. The student is feeling {mood}."}
-        ]
-
-    # Display chat history
-    for msg in st.session_state.messages[1:]:
-        st.chat_message(msg["role"]).markdown(msg["content"])
-
-    # User input
-    if prompt := st.chat_input("Say something..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").markdown(prompt)
-
-        with st.spinner("Thinking..."):
-            try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=st.session_state.messages
-                )
-                reply = response.choices[0].message.content
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-                st.chat_message("assistant").markdown(reply)
-            except Exception as e:
-                st.error(f"Error: {e}")
-
-    if st.session_state.current_page == ("Chatbot"):
-        chatbot_page()
-       
-     
-
+    if st.button("Continue to Feedback"):
+        st.session_state.page = "📝 Feedback"
+        st.rerun()
 
 # ========== Page 4: Feedback ===========
-elif st.session_state.current_page == "📝 Feedback":
+elif st.session_state.page == "📝 Feedback":
         st.title("💬 Feedback")
         st.write("Thank you for using our Mood Prediction App!")
     # Load animation
@@ -422,17 +369,9 @@ elif st.session_state.current_page == "📝 Feedback":
         feedback = st.text_area("How was your experience?")
         if st.button("Submit Feedback"):
             with open("data/feedback.csv", "a", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow([st.session_state.get("name", "Anonymous"), feedback])
+                        writer = csv.writer(f)
+                        writer.writerow([st.session_state.get("name", "Anonymous"), feedback])
             st.success("Thanks for your feedback! 🌟")
-             # ✨ Add custom thank-you message
+            # ✨ Add custom thank-you message
             st.markdown("### 🙏 We appreciate your time!")
             st.info("Your feedback helps us improve. Stay happy and healthy!")
-
-    # Continue button to go to Feedback page
-        if st.button("➡️ Continue to Feedback"):
-            st.session_state.page = "📝 Feedback"
-            st.rerun()
-
-
-
