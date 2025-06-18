@@ -215,7 +215,7 @@ elif st.session_state.page == "📊 Mood Check":
         if st.form_submit_button("Analyze My Mood"):
             if journal_entry.strip():
                 # Sentiment analysis
-                polarity = TextBlob(journal_entry).sentiment.polarty
+                polarity = TextBlob(journal_entry).sentiment.polarity
                 
                 # Calculate scores
                 sleep_score = min(sleep_hours / 8, 1.0)
