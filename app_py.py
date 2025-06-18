@@ -151,6 +151,8 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'quiz_answers' not in st.session_state:
     st.session_state.quiz_answers = {}
+if 'mood_analyzed' not in st.session_state:
+    st.session_state.mood_analyzed = False
 
 # Sidebar Navigation
 with st.sidebar:
@@ -165,13 +167,13 @@ with st.sidebar:
 # ========= Page 1: Welcome ========
 if st.session_state.page == "🌱 Welcome":
     st.title("🌿 Welcome to NatureMind")
-    st.markdown("""
+    st.markdown(f"""
     <div style="background-color:{card_bg}; padding:20px; border-radius:12px;">
         <p>Find your balance with our nature-inspired wellness companion. 
         Track your mood, get personalized suggestions, and chat with Terra, 
         your friendly plant-based guide.</p>
     </div>
-    """.format(card_bg=card_bg), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     anim = load_lottie_url("https://assets5.lottiefiles.com/packages/lf20_yo4lqexz.json")
     if anim:
@@ -199,8 +201,20 @@ elif st.session_state.page == "📊 Mood Check":
     st.title("🌼 Mood Check-In")
     st.write(f"Hello, {st.session_state.get('name', 'friend')}! Let's see how you're doing today.")
     
-    # Move the form submission check outside the form
-    if 'mood_analyzed' in st.session_state and st.session_state.mood_analyzed:
+    # Initialize variables with default values
+    mood = "Not analyzed yet"
+    mood_score = 0
+    risk = "Not analyzed yet"
+    mood_color = accent_color
+    
+    # Check if mood analysis has been done
+    if st.session_state.mood_analyzed:
+        # Get values from session state
+        mood = st.session_state.get("mood", mood)
+        mood_score = st.session_state.get("mood_score", mood_score)
+        risk = st.session_state.get("risk", risk)
+        mood_color = st.session_state.get("mood_color", mood_color)
+        
         st.success("Analysis complete!")
         
         col1, col2, col3 = st.columns(3)
@@ -397,7 +411,6 @@ elif st.session_state.page == "🌿 Wellness Guide":
             st.rerun()
     
     elif risk == "High" and "quiz_complete" in st.session_state:
-        # Rest of your high risk quiz complete code remains the same
         # Analyze quiz results
         score = sum([
             0 if ans in ["Normal", "Restful", "Manageable"] else
