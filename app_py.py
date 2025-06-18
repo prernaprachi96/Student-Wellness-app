@@ -580,42 +580,63 @@ elif st.session_state.page == "💬 Terra Chat":
     </div>
     """, unsafe_allow_html=True)
     
-    # Chat container
-    chat_container = st.container()
+    # Initialize OpenAI client
+    if "openai_client" not in st.session_state:
+        from openai import OpenAI
+        st.session_state.openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     
-    # Display chat history
-    with chat_container:
-        for message in st.session_state.chat_history:
-            if message["role"] == "user":
-                st.markdown(f"""
-                <div class="chat-message user-message">
-                    <p><strong>You:</strong> {message["content"]}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class="chat-message bot-message">
-                    <p><strong>Terra:</strong> {message["content"]}</p>
-                </div>
-                """, unsafe_allow_html=True)
+    # Initialize chat history if not exists
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = [
+            {"role": "assistant", "content": f"Hi {st.session_state.get('name', 'friend')}! I'm Terra, your plant-inspired wellness guide. How can I help you today?"}
+        ]
+    
+    # Display chat messages
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.markdown(f"""
+            <div class="chat-message user-message">
+                <p><strong>You:</strong> {message["content"]}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="chat-message bot-message">
+                <p><strong>Terra:</strong> {message["content"]}</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Chat input
-    with st.form("chat_form"):
-        user_input = st.text_input("Type your message...", key="chat_input")
-        send_button = st.form_submit_button("Send")
+    user_input = st.chat_input("Type your message here...")
     
-    if send_button and user_input:
-        # Add user message to history
+    if user_input:
+        # Add user message to chat history
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-        # Generate bot response
-        bot_response = generate_chat_response(user_input)
-        
-        # Add bot response to history
-        st.session_state.chat_history.append({"role": "bot", "content": bot_response})
-        
-        # Rerun to update chat display
-        st.rerun()
+        try:
+            # Generate response using the new API
+            response = st.session_state.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are Terra, a friendly, nature-inspired wellness assistant. Use plant/animal metaphors and keep responses under 3 sentences."},
+                    *[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
+                ],
+                temperature=0.7,
+            )
+            
+            # Get the assistant's reply
+            assistant_reply = response.choices[0].message.content
+            
+            # Add assistant response to chat history
+            st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+            
+            # Rerun to update the chat display
+            st.rerun()
+            
+        except Exception as e:
+            error_msg = f"I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
+            st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
+            st.rerun()
     
     # Suggested questions
     st.markdown("""
