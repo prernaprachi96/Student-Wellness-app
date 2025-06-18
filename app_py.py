@@ -230,7 +230,7 @@ elif st.session_state.page == "📊 Mood Check":
                     0.15 * nature_score +
                     0.15 * exercise_score -
                     0.1 * (1 - screen_score)
-                
+                )
                 # Determine risk level
                 if mood_score > 0.4:
                     mood = "Thriving 🌸"
