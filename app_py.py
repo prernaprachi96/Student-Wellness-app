@@ -5,22 +5,26 @@ import os
 import csv
 from streamlit_lottie import st_lottie
 import requests
-import random
-import time
+from streamlit_option_menu import option_menu
+import altair as alt
 from datetime import datetime
+import base64
+from io import BytesIO
+import openai
+import random
 
-# Create folders if not exist
-os.makedirs("data", exist_ok=True)
+# Add your OpenAI API key here
+openai.api_key = "YOUR_OPENAI_API_KEY"
 
-# Set page config with nature theme
-st.set_page_config(
-    page_title="MindGarden",
-    page_icon="🌿",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
+# =========Helper function Loader=============
+def load_lottie_url(url):
+    r = requests.get(url)
+    if r.status_code == 200:
+        return r.json()
+    else:
+        return None
 
-# ========== Helper Functions ==========
+# ========== Function to Load Animation with cache ==========
 @st.cache_data(ttl=3600)
 def load_lottie_url(url):
     try:
@@ -31,522 +35,390 @@ def load_lottie_url(url):
     except Exception:
         return None
 
-# Nature-themed color palette
-colors = {
-    "primary": "#2E8B57",  # Sea Green
-    "secondary": "#3CB371",  # Medium Sea Green
-    "accent": "#20B2AA",  # Light Sea Green
-    "background": "#F5FFFA",  # Mint Cream
-    "text": "#2F4F4F",  # Dark Slate Gray
-    "card": "#E0F7E0",  # Very Light Green
-    "warning": "#FF6347",  # Tomato
-    "positive": "#4CAF50"  # Green
-}
+# Create folders if not exist
+os.makedirs("data", exist_ok=True)
 
-# Apply nature-themed CSS
+st.set_page_config(page_title="NatureMind Wellness", layout="centered", page_icon="🌿")
+
+# ---------- Dark Mode Theming ----------
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = True
+
+# Apply nature-inspired dark theme
+bg_color = "#0a1a0f"  # Dark forest green
+text_color = "#e0f7e0"  # Soft greenish white
+card_bg = "#1a2b1a"  # Medium forest green
+button_bg = "#4a8c4a"  # Nature green
+button_text = "#ffffff"  # White
+accent_color = "#5dbb63"  # Bright nature green
+danger_color = "#ff6b6b"  # For high risk alerts
+
 st.markdown(
     f"""
     <style>
-    body {{ background-color: {colors['background']}; color: {colors['text']}; }}
-    .stApp {{ background-color: {colors['background']}; color: {colors['text']}; }}
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea {{
-        background-color: white;
-        border: 1px solid {colors['primary']};
-    }}
-    .stButton>button {{
-        background-color: {colors['primary']};
-        color: white;
-        border: none;
+    body {{ background-color: {bg_color}; color: {text_color}; }}
+    .stApp {{ background-color: {bg_color}; color: {text_color}; }}
+    div[data-testid="stMetric"] {{
+        background-color: {card_bg};
+        color: {text_color};
         border-radius: 8px;
-        padding: 8px 16px;
-    }}
-    .stButton>button:hover {{
-        background-color: {colors['secondary']};
-        color: white;
-    }}
-    .chatbot-message {{
-        background-color: {colors['card']};
-        border-radius: 15px;
-        padding: 12px;
-        margin: 5px 0;
-        border-left: 5px solid {colors['accent']};
-    }}
-    .user-message {{
-        background-color: {colors['primary']};
-        color: white;
-        border-radius: 15px;
-        padding: 12px;
-        margin: 5px 0;
-    }}
-    .suggestion-card {{
-        background-color: {colors['card']};
-        border-radius: 15px;
-        padding: 15px;
-        margin: 10px 0;
-        border-left: 5px solid {colors['accent']};
-    }}
-    .warning-card {{
-        background-color: #FFEBEE;
-        border-radius: 15px;
-        padding: 15px;
-        margin: 10px 0;
-        border-left: 5px solid {colors['warning']};
-    }}
-    .positive-card {{
-        background-color: #E8F5E9;
-        border-radius: 15px;
-        padding: 15px;
-        margin: 10px 0;
-        border-left: 5px solid {colors['positive']};
-    }}
-    .routine-item {{
-        display: flex;
+        padding: 10px;
         margin-bottom: 10px;
-        align-items: center;
     }}
-    .routine-time {{
-        font-weight: bold;
-        color: {colors['primary']};
-        width: 80px;
+    table {{ color: {text_color}; }}
+    button[kind="primary"] {{
+        background-color: {button_bg} !important;
+        color: {button_text} !important;
+        border: none !important;
     }}
-    .routine-activity {{
-        flex-grow: 1;
-        padding-left: 15px;
-        border-left: 2px solid {colors['accent']};
+    button[kind="primary"]:hover {{
+        background-color: #3a6b3a !important;
+        color: white !important;
+    }}
+    .stTextInput>div>div>input {{
+        background-color: {card_bg};
+        color: {text_color};
+    }}
+    .stNumberInput>div>div>input {{
+        background-color: {card_bg};
+        color: {text_color};
+    }}
+    select {{
+        background-color: {card_bg};
+        color: {text_color};
+    }}
+    .chat-message {{
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        display: flex;
+        max-width: 80%;
+    }}
+    .chat-message.user {{
+        background-color: {card_bg};
+        margin-left: auto;
+        border-bottom-right-radius: 0;
+    }}
+    .chat-message.bot {{
+        background-color: {button_bg};
+        margin-right: auto;
+        border-bottom-left-radius: 0;
+    }}
+    .stChatInput {{
+        bottom: 20px;
+        position: fixed;
+    }}
+    .quiz-question {{
+        background-color: {card_bg};
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }}
+    .quiz-option {{
+        background-color: {button_bg};
+        padding: 10px;
+        border-radius: 5px;
+        margin: 5px 0;
+        cursor: pointer;
+    }}
+    .quiz-option:hover {{
+        background-color: #3a6b3a;
     }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ========== Chatbot Functionality ==========
-class MindGardenChatbot:
-    def __init__(self):
-        self.responses = {
-            "greeting": [
-                "Hello! I'm Willow, your MindGarden guide. How can I help you grow today? 🌱",
-                "Welcome back to your MindGarden! What's on your mind? 🌸",
-                "Hi there! Ready to nurture your wellbeing? 🌿"
-            ],
-            "mood": [
-                "I hear you. Emotions are like weather in your MindGarden - sometimes sunny, sometimes rainy. Both are important for growth. 🌦️",
-                "Thank you for sharing. Remember, every feeling is valid in your MindGarden. 🌈",
-                "I understand. Let's tend to these feelings together. What would help right now? 🌻"
-            ],
-            "stress": [
-                "When stress feels overwhelming, try the 5-4-3-2-1 grounding technique: Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, and 1 you taste. 🌍",
-                "Stress is like a storm in your garden - temporary and necessary for growth. Try some deep breathing with me: Inhale for 4, hold for 4, exhale for 6. 🌬️",
-                "Let's plant some calm. Would you like a guided meditation or some nature sounds? 🎧"
-            ],
-            "sleep": [
-                "Sleep is the water that nourishes your MindGarden. Try a digital sunset - no screens 1 hour before bed. 🌙",
-                "Having trouble sleeping? A warm cup of chamomile tea and some gentle stretches might help. 🍵",
-                "Your sleep garden needs tending. Consistent bedtime routines help your body's natural rhythms. ⏰"
-            ],
-            "unknown": [
-                "I'm still growing my knowledge! Could you tell me more about what you need? 🌱",
-                "That's an interesting question for this garden. Let me think how best to help... 🌷",
-                "I want to make sure I understand. Could you rephrase that for me? 🌼"
-            ],
-            "farewell": [
-                "Remember to tend to your MindGarden daily. You're doing great! 🌟",
-                "Wishing you peace and growth until we chat again. 🌿",
-                "Thank you for nurturing your wellbeing today. Come back anytime! 🌸"
-            ]
-        }
-    
-    def respond(self, message):
-        message = message.lower()
-        if any(word in message for word in ["hi", "hello", "hey"]):
-            return random.choice(self.responses["greeting"])
-        elif any(word in message for word in ["feel", "mood", "emotion"]):
-            return random.choice(self.responses["mood"])
-        elif any(word in message for word in ["stress", "overwhelm", "anxious"]):
-            return random.choice(self.responses["stress"])
-        elif any(word in message for word in ["sleep", "tired", "rest"]):
-            return random.choice(self.responses["sleep"])
-        elif any(word in message for word in ["bye", "goodbye", "thanks"]):
-            return random.choice(self.responses["farewell"])
-        else:
-            return random.choice(self.responses["unknown"])
-
 # Initialize chatbot
-if "chatbot" not in st.session_state:
-    st.session_state.chatbot = MindGardenChatbot()
+if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+    st.session_state.chat_history.append({"role": "bot", "content": "🌿 Welcome to NatureMind! I'm your wellness companion. How can I help you today?"})
 
-# ========== Burnout Quiz ==========
-def burnout_quiz():
-    questions = [
-        {
-            "question": "How often do you feel exhausted, even after resting?",
-            "options": ["Rarely", "Sometimes", "Often", "Almost always"]
-        },
-        {
-            "question": "How difficult do you find it to concentrate on tasks?",
-            "options": ["Not difficult", "Somewhat difficult", "Very difficult", "Extremely difficult"]
-        },
-        {
-            "question": "How often do you feel detached or cynical about your work/daily activities?",
-            "options": ["Rarely", "Sometimes", "Often", "Almost always"]
-        },
-        {
-            "question": "How would you rate your sleep quality recently?",
-            "options": ["Excellent", "Good", "Fair", "Poor"]
-        },
-        {
-            "question": "How often do you experience physical symptoms like headaches or stomachaches?",
-            "options": ["Rarely", "Sometimes", "Often", "Almost always"]
-        }
-    ]
-    
-    if "quiz_answers" not in st.session_state:
-        st.session_state.quiz_answers = [None] * len(questions)
-        st.session_state.current_question = 0
-    
-    if st.session_state.current_question < len(questions):
-        q = questions[st.session_state.current_question]
-        st.subheader(f"Question {st.session_state.current_question + 1}/{len(questions)}")
-        st.markdown(f"### {q['question']}")
-        
-        cols = st.columns(2)
-        for i, option in enumerate(q["options"]):
-            with cols[i % 2]:
-                if st.button(option, key=f"q{st.session_state.current_question}_o{i}"):
-                    st.session_state.quiz_answers[st.session_state.current_question] = i
-                    st.session_state.current_question += 1
-                    st.rerun()
-    else:
-        # Calculate score (higher = more burnout risk)
-        score = sum(st.session_state.quiz_answers)
-        
-        st.subheader("Your Burnout Assessment")
-        if score <= 5:
-            st.markdown(f"""
-            <div class="positive-card">
-                <h3>🌱 Mild Burnout Risk</h3>
-                <p>Your garden is thriving! You're managing stress well, but here are some tips to maintain balance:</p>
-                <ul>
-                    <li>Continue your healthy routines</li>
-                    <li>Practice gratitude journaling</li>
-                    <li>Take regular nature breaks</li>
-                    <li>Share your energy with others</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        elif score <= 10:
-            st.markdown(f"""
-            <div class="suggestion-card">
-                <h3>🌿 Moderate Burnout Risk</h3>
-                <p>Your garden needs some attention. Consider these nurturing practices:</p>
-                <ul>
-                    <li>Set clearer boundaries between work and rest</li>
-                    <li>Schedule regular digital detox periods</li>
-                    <li>Practice the 20-20-20 rule (every 20 mins, look at something 20 feet away for 20 seconds)</li>
-                    <li>Connect with supportive friends or family</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="warning-card">
-                <h3>⚠️ High Burnout Risk</h3>
-                <p>Your garden needs immediate care. Please consider:</p>
-                <ul>
-                    <li>Taking a mental health day if possible</li>
-                    <li>Speaking with a healthcare professional</li>
-                    <li>Implementing daily relaxation practices</li>
-                    <li>Reducing non-essential commitments</li>
-                </ul>
-                <p><strong>Immediate support:</strong> <a href="tel:988">988 Suicide & Crisis Lifeline</a> (US) or <a href="https://www.crisistextline.org/" target="_blank">Crisis Text Line</a></p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        if st.button("Back to Wellness Guide"):
-            del st.session_state.quiz_answers
-            del st.session_state.current_question
-            st.session_state.page = "✨ Wellness Guide"
-            st.rerun()
+if "quiz_answers" not in st.session_state:
+    st.session_state.quiz_answers = []
+    st.session_state.quiz_complete = False
 
-# ========== Pages ==========
-pages = ["👤 User Info", "📊 Mood Garden", "✨ Wellness Guide", "💬 Chat with Willow"]
+# Pages list
+pages = ["👤 User Info", "📊 Dashboard", "✨ Suggestions", "📝 Feedback"]
 
 # Initialize session state for current page
 if 'page' not in st.session_state or st.session_state.page not in pages:
     st.session_state.page = pages[0]
 
 # Sidebar Navigation
-st.sidebar.title("🌿 MindGarden")
-st.sidebar.markdown("Nurture your mental wellbeing")
+st.sidebar.title("Navigation")
+current_idx = pages.index(st.session_state.page)
 
-for page in pages:
-    if st.sidebar.button(page):
-        st.session_state.page = page
+for i, page in enumerate(pages):
+    if i <= current_idx:
+        if st.sidebar.button(f"{i+1}. {page}", key=page):
+            st.session_state.page = page
+    else:
+        st.sidebar.markdown(f"{i+1}. {page} 🔒")
 
 # Page Navigator
 def go_next():
-    current_idx = pages.index(st.session_state.page)
-    if current_idx + 1 < len(pages):
-        st.session_state.page = pages[current_idx + 1]
+    next_idx = pages.index(st.session_state.page) + 1
+    if next_idx < len(pages):
+        st.session_state.page = pages[next_idx]
+
+# ========== Chatbot Functions ==========
+def handle_chat_input():
+    user_input = st.session_state.chat_input
+    if user_input.strip():
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        
+        # Simple chatbot responses
+        if any(word in user_input.lower() for word in ["hi", "hello", "hey"]):
+            response = "🌱 Hello there! How can I assist you with your wellness journey today?"
+        elif any(word in user_input.lower() for word in ["stress", "anxious", "overwhelmed"]):
+            response = "🍃 I hear you're feeling stressed. Remember to take deep breaths. Would you like a guided breathing exercise?"
+        elif any(word in user_input.lower() for word in ["sleep", "tired"]):
+            response = "🌙 Sleep is crucial for wellbeing. Try establishing a calming bedtime routine with dim lights and no screens 1 hour before bed."
+        elif any(word in user_input.lower() for word in ["thank", "thanks"]):
+            response = "🌸 You're welcome! Remember, small steps lead to big changes in wellness."
+        else:
+            response = "🌿 That's an interesting thought. Could you tell me more about how you're feeling?"
+        
+        st.session_state.chat_history.append({"role": "bot", "content": response})
+        st.session_state.chat_input = ""
+
+# ========== Quiz Functions ==========
+def handle_quiz_answer(question_idx, answer):
+    st.session_state.quiz_answers[question_idx] = answer
+    if None not in st.session_state.quiz_answers:
+        st.session_state.quiz_complete = True
+
+def get_quiz_suggestions():
+    score = sum(st.session_state.quiz_answers)
+    if score <= 5:
+        return """
+        🌧️ You're showing several signs of burnout. Please consider:
+        1. Taking a complete mental health day
+        2. Talking to a professional
+        3. Reducing your workload where possible
+        4. Practicing daily mindfulness
+        """
+    elif score <= 10:
+        return """
+        🌤️ You're showing some signs of stress. Try these:
+        1. Schedule regular breaks during work
+        2. Practice the 20-20-20 rule (every 20 mins, look 20 feet away for 20 seconds)
+        3. Start a gratitude journal
+        4. Increase physical activity
+        """
+    else:
+        return """
+        🌞 You're managing well! To maintain balance:
+        1. Keep up your healthy habits
+        2. Check in with yourself weekly
+        3. Help others with their wellness
+        4. Continue learning about self-care
+        """
 
 # ========== Page 1: User Info ==========
 if st.session_state.page == "👤 User Info":
-    st.title("🌱 Welcome to MindGarden")
-    st.markdown("Let's get to know each other before we start nurturing your wellbeing garden.")
-    
+    st.title("🌱 NatureMind Wellness")
+    st.markdown("Please fill in your details to get started")
+
     animation = load_lottie_url("https://assets2.lottiefiles.com/packages/lf20_1pxqjqps.json")
     if animation:
         st_lottie(animation, height=220, key="character_animation")
-    
-    with st.form("user_info"):
-        name = st.text_input("Your Name")
-        age = st.number_input("Your Age", min_value=10, max_value=100, step=1)
-        gender = st.selectbox("Gender Identity", ["Female", "Male", "Non-binary", "Other", "Prefer not to say"])
-        
-        if st.form_submit_button("Plant Your Garden"):
-            if name:
-                st.session_state.name = name
-                st.session_state.age = age
-                st.session_state.gender = gender
-                
-                # Save user info
-                with open("data/user_info.csv", "a", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow([name, age, gender])
-                
-                go_next()
-            else:
-                st.warning("Please enter your name to continue.")
+    else:
+        st.warning("⚠️ Animation failed to load. Please check your internet or animation URL.")
 
-# ========== Page 2: Mood Garden ==========
-elif st.session_state.page == "📊 Mood Garden":
-    st.title("🌸 Your Mood Garden")
-    st.write(f"Welcome, {st.session_state.get('name', 'Gardener')}! Let's check in with your emotional landscape today.")
-    
-    with st.expander("📝 Journal Entry"):
-        journal_entry = st.text_area("What's growing in your mind today? What needs watering or pruning?", height=150)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        sleep_hours = st.slider("🌙 Sleep last night (hours)", 0, 12, 7)
-    with col2:
-        screen_time = st.slider("📱 Screen time today (hours)", 0, 16, 4)
-    
-    workout_done = st.selectbox("💪 Movement today", ["Not yet", "Light activity", "Moderate exercise", "Intense workout"])
-    social_interaction = st.selectbox("👥 Social connection", ["Little/none", "Some", "Plenty"])
-    
-    if st.button("🌻 Analyze My Garden"):
+    name = st.text_input("Your Name")
+    age = st.number_input("Your Age", min_value=10, max_value=100, step=1)
+    gender = st.selectbox("Select your gender:", ["Male", "Female", "Other", "Prefer not to say"])
+
+    if st.button("Continue to Dashboard"):
+        if name:
+            st.session_state.name = name
+            st.session_state.age = age
+            st.session_state.gender = gender
+
+            with open("data/user_info.csv", "a", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([name, age, gender])
+
+            go_next()
+        else:
+            st.warning("Please enter your name to continue.")
+
+# ========== Page 2: Dashboard ==========
+elif st.session_state.page == "📊 Dashboard":
+    st.title("🌿 Wellness Dashboard")
+    st.write(f"Welcome, {st.session_state.get('name', 'User')}!")
+    st.markdown("### ✏️ Nature Journal")
+    journal_entry = st.text_area("Write about your day, thoughts, or feelings:", height=200)
+
+    sleep_hours = st.slider("🌙 Hours slept last night", 0, 12, 6)
+    screen_time = st.slider("📱 Daily Screen Time (hours)", 0, 16, 6)
+    workout_done = st.selectbox("🏃‍♀️ Physical activity today?", ["Yes", "No"])
+
+    if 'mood_analyzed' not in st.session_state:
+        st.session_state.mood_analyzed = False
+
+    if st.button("Analyze My Wellness"):
         if journal_entry.strip():
             polarity = TextBlob(journal_entry).sentiment.polarity
-            
-            # Calculate scores
-            sleep_score = min(sleep_hours / 8, 1.5)  # Max 1.5 for 12 hours
-            workout_score = {"Not yet": 0, "Light activity": 0.5, "Moderate exercise": 1, "Intense workout": 1.2}[workout_done]
-            screen_score = max(0, (screen_time - 2) / 10)  # More than 2 hours starts reducing score
-            social_score = {"Little/none": 0, "Some": 0.5, "Plenty": 1}[social_interaction]
-            
+
+            sleep_score = sleep_hours
+            workout_score = 1 if workout_done == "Yes" else 0
+            screen_score = screen_time
+
             mood_score = (
                 (0.4 * polarity) +
-                (0.3 * sleep_score) +
+                (0.3 * (sleep_score / 10)) +
                 (0.2 * workout_score) -
-                (0.2 * screen_score) +
-                (0.1 * social_score)
+                (0.2 * (screen_score / 10))
             )
-            
-            if mood_score > 0.6:
-                mood = "Blossoming 🌸"
+
+            if mood_score > 0.4:
+                mood = "Thriving 🌸"
                 risk = "Low"
-                color = colors["positive"]
-                animation_url = "https://assets4.lottiefiles.com/packages/lf20_touohxv0.json"
-            elif mood_score > 0.3:
-                mood = "Growing 🌿"
+            elif mood_score > 0.1:
+                mood = "Balanced 🌿"
                 risk = "Moderate"
-                color = colors["secondary"]
-                animation_url = "https://assets1.lottiefiles.com/packages/lf20_yo4lqexz.json"
             else:
                 mood = "Needs Care 🍂"
                 risk = "High"
-                color = colors["warning"]
-                animation_url = "https://assets3.lottiefiles.com/packages/lf20_qpsnmykx.json"
-            
-            # Display results
-            st.markdown(f"""
-            <div style="background-color: {colors['card']}; border-radius: 15px; padding: 20px; margin: 15px 0; border-left: 5px solid {color};">
-                <h2 style="color: {color}; margin-top: 0;">Your Garden Status: {mood}</h2>
-                <p>Mood Score: <strong>{mood_score:.2f}/1.0</strong></p>
-                <p>Wellness Level: <strong>{risk}</strong></p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Load appropriate animation
-            anim = load_lottie_url(animation_url)
-            if anim:
-                st_lottie(anim, height=150, key="mood_anim")
-            
+
+            st.metric("Current State", mood)
+            st.metric("Wellness Score", f"{mood_score:.2f}")
+            st.metric("Burnout Risk", risk)
+
             st.session_state.avg_mood = mood_score
             st.session_state.risk = risk
             st.session_state.mood_analyzed = True
-            
+
             if risk == "High":
-                st.markdown(f"""
-                <div class="warning-card">
-                    <h3>Your Garden Needs Extra Care</h3>
-                    <p>Let's assess your needs with a quick wellness check-in.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button("Begin Wellness Check-in"):
-                    st.session_state.page = "✨ Wellness Guide"
-                    st.rerun()
+                st.session_state.quiz_answers = [None] * 5  # Reset quiz
+                st.session_state.quiz_complete = False
+
+            if risk == "Low":
+                flower_animation = load_lottie_url("https://assets4.lottiefiles.com/packages/lf20_touohxv0.json")
+                if flower_animation:
+                    st_lottie(flower_animation, height=150, key="flower_animation")
         else:
-            st.warning("Please share something about your day to analyze.")
+            st.warning("Please enter something in your journal to analyze.")
 
-# ========== Page 3: Wellness Guide ==========
-elif st.session_state.page == "✨ Wellness Guide":
-    if "risk" in st.session_state and st.session_state.risk == "High" and "quiz_answers" not in st.session_state:
-        burnout_quiz()
-    else:
-        st.title("🌿 Your Wellness Guide")
-        st.write(f"Welcome, {st.session_state.get('name', 'Gardener')}! Here's your personalized wellbeing plan.")
-        
-        # Header with animation
-        header_col1, header_col2 = st.columns([3,1])
-        with header_col1:
-            st.markdown("### Nurture Your MindGarden")
-        with header_col2:
-            wellness_anim = load_lottie_url("https://assets1.lottiefiles.com/packages/lf20_yo4lqexz.json")
-            if wellness_anim:
-                st_lottie(wellness_anim, height=80, key="wellness_header")
-        
-        risk = st.session_state.get("risk", "Moderate")
-        
-        # Motivational quote
-        quotes = {
-            "Low": "Your garden is thriving! Keep nurturing it with love and attention. 🌸",
-            "Moderate": "Every garden needs care. Small, consistent actions create lasting growth. 🌱",
-            "High": "Even the most neglected garden can bloom again with care and patience. 🌻"
-        }
-        st.markdown(f"""
-        <div class="suggestion-card">
-            <p style="font-size: 18px; font-style: italic;">"{quotes.get(risk, 'Growth takes time. Be gentle with yourself.')}"</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if risk == "High":
-            st.markdown(f"""
-            <div class="warning-card">
-                <h3>🌱 Recovery Plan</h3>
-                <p>Your garden needs extra nourishment. Try these gentle steps:</p>
-                <ul>
-                    <li><strong>Morning:</strong> 5 minutes of deep breathing outdoors</li>
-                    <li><strong>Midday:</strong> Hydrate with herbal tea and a short walk</li>
-                    <li><strong>Afternoon:</strong> Digital detox for 30 minutes</li>
-                    <li><strong>Evening:</strong> Warm bath and gratitude reflection</li>
-                </ul>
-                <p>Would you like to talk with Willow about specific concerns?</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("💬 Chat with Willow"):
-                st.session_state.page = "💬 Chat with Willow"
-                st.rerun()
-        
-        elif risk == "Moderate":
-            st.markdown(f"""
-            <div class="suggestion-card">
-                <h3>🌿 Balance Boosters</h3>
-                <p>Your garden could use some tending. Try these practices:</p>
-                <ul>
-                    <li>Nature breaks every 2 hours (even looking out a window helps)</li>
-                    <li>Evening digital sunset (no screens 1 hour before bed)</li>
-                    <li>Weekly "forest bathing" - spend time mindfully in nature</li>
-                    <li>Gratitude journaling each morning or evening</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Nature sound player
-            st.markdown("### 🎶 Nature Sounds for Relaxation")
-            sound_options = {
-                "Forest Rain": "https://www.youtube.com/watch?v=H9I3VnFvp8M",
-                "Ocean Waves": "https://www.youtube.com/watch?v=aBkTkxKDduc",
-                "Mountain Stream": "https://www.youtube.com/watch?v=Yxq7Q1QY1Q4",
-                "Birdsong": "https://www.youtube.com/watch?v=6S3OqQXk3vA"
-            }
-            selected_sound = st.selectbox("Choose a soundscape:", list(sound_options.keys()))
-            st.video(sound_options[selected_sound])
-        
-        else:  # Low risk
-            st.markdown(f"""
-            <div class="positive-card">
-                <h3>🌸 Flourishing Practices</h3>
-                <p>Your garden is blooming! Keep up these habits:</p>
-                <ul>
-                    <li>Share your positive energy with others</li>
-                    <li>Try new growth experiences (learn a skill, explore nature)</li>
-                    <li>Maintain your healthy routines</li>
-                    <li>Practice mindful appreciation of your progress</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Celebration animation
-            celebration_anim = load_lottie_url("https://assets6.lottiefiles.com/packages/lf20_sk5h1kfn.json")
-            if celebration_anim:
-                st_lottie(celebration_anim, height=200, key="celebration")
-        
-        # Guided meditation section
-        st.markdown("### � Guided Practices")
-        meditations = {
-            "5-Minute Breathing": "https://www.youtube.com/watch?v=SEfs5TJZ6Nk",
-            "Body Scan Relaxation": "https://www.youtube.com/watch?v=86HUcX8ZtAk",
-            "Mindful Walking": "https://www.youtube.com/watch?v=6p_yaNFSYao",
-            "Loving-Kindness Meditation": "https://www.youtube.com/watch?v=sz7cpV7ERsM"
-        }
-        selected_meditation = st.selectbox("Choose a guided practice:", list(meditations.keys()))
-        st.video(meditations[selected_meditation])
+    if st.session_state.mood_analyzed:
+        if st.button("Continue to Suggestions"):
+            go_next()
 
-# ========== Page 4: Chat with Willow ==========
-elif st.session_state.page == "💬 Chat with Willow":
-    st.title("💬 Chat with Willow")
-    st.markdown("Your friendly MindGarden guide is here to help you grow.")
+    # Chatbot in Dashboard
+    st.markdown("---")
+    st.markdown("### 🌱 Wellness Companion")
     
     # Display chat history
     for message in st.session_state.chat_history:
-        if message["role"] == "assistant":
-            st.markdown(f"""
-            <div class="chatbot-message">
-                <strong>Willow 🌿</strong><br>
-                {message["content"]}
-            </div>
-            """, unsafe_allow_html=True)
+        if message["role"] == "user":
+            st.markdown(f'<div class="chat-message user">{message["content"]}</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f"""
-            <div class="user-message">
-                <strong>You</strong><br>
-                {message["content"]}
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-message bot">{message["content"]}</div>', unsafe_allow_html=True)
     
     # Chat input
-    user_input = st.text_input("Type your message to Willow...", key="chat_input")
-    
-    if user_input:
-        # Add user message to history
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
-        # Get bot response
-        bot_response = st.session_state.chatbot.respond(user_input)
-        
-        # Add typing animation delay
-        with st.spinner("Willow is thinking..."):
-            time.sleep(1)  # Simulate typing delay
-            st.session_state.chat_history.append({"role": "assistant", "content": bot_response})
-            st.rerun()
-    
-    if st.button("Back to Wellness Guide"):
-        st.session_state.page = "✨ Wellness Guide"
-        st.rerun()
+    st.text_input("Message the wellness companion...", key="chat_input", on_change=handle_chat_input)
 
-# Add footer
-st.markdown("---")
-st.markdown("🌻 MindGarden - Nurturing your mental wellbeing daily")
+# ========== Page 3: Suggestions ==========
+elif st.session_state.page == "✨ Suggestions":
+    st.title("🌻 Personalized Suggestions")
+    risk = st.session_state.get('risk', 'Moderate')
+
+    if risk == "High" and not st.session_state.quiz_complete:
+        st.markdown("### 🍂 Burnout Risk Assessment")
+        st.markdown("Let's understand your situation better with a quick quiz:")
+        
+        questions = [
+            "How often do you feel exhausted?",
+            "Do you have trouble concentrating?",
+            "How often do you feel irritable?",
+            "Do you feel less productive than usual?",
+            "How often do you feel detached from work?"
+        ]
+        
+        options = [
+            ["Never", "Rarely", "Sometimes", "Often", "Always"],
+            ["Not at all", "Slightly", "Moderately", "Quite a bit", "Extremely"],
+            ["Never", "Rarely", "Sometimes", "Often", "Always"],
+            ["Not at all", "Slightly", "Moderately", "Quite a bit", "Extremely"],
+            ["Never", "Rarely", "Sometimes", "Often", "Always"]
+        ]
+        
+        for i, question in enumerate(questions):
+            st.markdown(f'<div class="quiz-question">{i+1}. {question}</div>', unsafe_allow_html=True)
+            cols = st.columns(5)
+            for j, option in enumerate(options[i]):
+                with cols[j]:
+                    if st.button(option, key=f"quiz_{i}_{j}"):
+                        handle_quiz_answer(i, j)
+        
+        if st.session_state.quiz_complete:
+            st.success("Quiz completed! Here are your personalized suggestions:")
+            st.markdown(get_quiz_suggestions())
+    else:
+        if risk == "Moderate":
+            st.subheader("🌿 Balance Restoration")
+            st.markdown("""
+            You're doing okay but could use some extra care:
+            - Try a 5-minute nature meditation
+            - Schedule screen-free time before bed
+            - Take short walking breaks every hour
+            """)
+        elif risk == "High":
+            if st.session_state.quiz_complete:
+                st.markdown(get_quiz_suggestions())
+            else:
+                st.subheader("🍂 Deep Recovery")
+                st.markdown("""
+                You might be feeling overwhelmed. Consider:
+                - Taking a complete mental health day
+                - Talking to a professional
+                - Practicing daily mindfulness
+                - Reducing workload where possible
+                """)
+        else:
+            st.subheader("🌸 Thriving Well")
+            st.markdown("""
+            You're doing great! To maintain your wellness:
+            - Keep up your healthy habits
+            - Check in with yourself weekly
+            - Help others with their wellness
+            - Continue learning about self-care
+            """)
+
+        st.markdown("---")
+        st.markdown("### 🎧 Nature Sound Therapy")
+        sound_options = {
+            "Forest Rain": "https://www.youtube.com/watch?v=OdIJ2x3nxzQ",
+            "Ocean Waves": "https://www.youtube.com/watch?v=rZ7VVGvrfiA",
+            "Mountain Stream": "https://www.youtube.com/watch?v=HiUY9vU-rYQ",
+            "Birds Singing": "https://www.youtube.com/watch?v=6D0Q1f1i1x0"
+        }
+        selected_sound = st.selectbox("Choose a nature sound:", options=list(sound_options.keys()))
+        st.video(sound_options[selected_sound])
+
+    if st.button("Continue to Feedback"):
+        st.session_state.page = "📝 Feedback"
+
+# ========== Page 4: Feedback ==========
+elif st.session_state.page == "📝 Feedback":
+    st.title("🍃 Your Feedback")
+    st.write("Thank you for using NatureMind Wellness!")
+    
+    feedback_animation = load_lottie_url("https://assets9.lottiefiles.com/packages/lf20_tutvdkg0.json")
+    if feedback_animation:
+        st_lottie(feedback_animation, height=200, key="feedback_anim")
+    
+    feedback = st.text_area("How was your experience with NatureMind Wellness?")
+    if st.button("Submit Feedback"):
+        with open("data/feedback.csv", "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([st.session_state.get("name", "Anonymous"), feedback])
+        st.success("🌻 Thank you for your feedback! Wishing you continued wellness.")
+        
+        # Celebration animation
+        confetti_anim = load_lottie_url("https://assets10.lottiefiles.com/packages/lf20_obhph3sh.json")
+        if confetti_anim:
+            st_lottie(confetti_anim, height=200, key="confetti")
