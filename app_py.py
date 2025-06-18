@@ -328,40 +328,68 @@ elif st.session_state.page == "🌿 Wellness Guide":
         </div>
         """, unsafe_allow_html=True)
         
-        with st.form("burnout_quiz"):
-            st.session_state.quiz_answers = {
-                "energy": st.radio(
-                    "1. How has your energy level been lately?",
-                    ["Normal", "Somewhat low", "Very low"],
-                    index=1
-                ),
-                "sleep": st.radio(
-                    "2. How has your sleep been?",
-                    ["Restful", "Occasionally restless", "Frequently disrupted"],
-                    index=1
-                ),
-                "concentration": st.radio(
-                    "3. How is your ability to concentrate?",
-                    ["Normal", "Somewhat difficult", "Very difficult"],
-                    index=1
-                ),
-                "motivation": st.radio(
-                    "4. How is your motivation for daily activities?",
-                    ["Normal", "Somewhat reduced", "Very reduced"],
-                    index=1
-                ),
-                "stress": st.radio(
-                    "5. How would you describe your stress levels?",
-                    ["Manageable", "Sometimes overwhelming", "Constantly overwhelming"],
-                    index=1
-                )
-            }
-            
-            if st.form_submit_button("Get My Recommendations"):
-                st.session_state.quiz_complete = True
-                st.rerun()
+        # Remove the form wrapper and use individual components
+        st.write("1. How has your energy level been lately?")
+        energy = st.radio(
+            "Energy level",
+            ["Normal", "Somewhat low", "Very low"],
+            index=1,
+            key="energy",
+            label_visibility="collapsed"
+        )
+        
+        st.write("2. How has your sleep been?")
+        sleep = st.radio(
+            "Sleep quality",
+            ["Restful", "Occasionally restless", "Frequently disrupted"],
+            index=1,
+            key="sleep",
+            label_visibility="collapsed"
+        )
+        
+        st.write("3. How is your ability to concentrate?")
+        concentration = st.radio(
+            "Concentration",
+            ["Normal", "Somewhat difficult", "Very difficult"],
+            index=1,
+            key="concentration",
+            label_visibility="collapsed"
+        )
+        
+        st.write("4. How is your motivation for daily activities?")
+        motivation = st.radio(
+            "Motivation",
+            ["Normal", "Somewhat reduced", "Very reduced"],
+            index=1,
+            key="motivation",
+            label_visibility="collapsed"
+        )
+        
+        st.write("5. How would you describe your stress levels?")
+        stress = st.radio(
+            "Stress levels",
+            ["Manageable", "Sometimes overwhelming", "Constantly overwhelming"],
+            index=1,
+            key="stress",
+            label_visibility="collapsed"
+        )
+        
+        # Store answers in session state
+        st.session_state.quiz_answers = {
+            "energy": energy,
+            "sleep": sleep,
+            "concentration": concentration,
+            "motivation": motivation,
+            "stress": stress
+        }
+        
+        # Move the button outside of any form context
+        if st.button("Get My Recommendations"):
+            st.session_state.quiz_complete = True
+            st.rerun()
     
     elif risk == "High" and "quiz_complete" in st.session_state:
+        # Rest of your high risk quiz complete code remains the same
         # Analyze quiz results
         score = sum([
             0 if ans in ["Normal", "Restful", "Manageable"] else
