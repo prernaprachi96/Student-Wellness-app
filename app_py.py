@@ -199,6 +199,63 @@ elif st.session_state.page == "📊 Mood Check":
     st.title("🌼 Mood Check-In")
     st.write(f"Hello, {st.session_state.get('name', 'friend')}! Let's see how you're doing today.")
     
+    # Move the form submission check outside the form
+    if 'mood_analyzed' in st.session_state and st.session_state.mood_analyzed:
+        st.success("Analysis complete!")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f"""
+            <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {mood_color}">
+                <h3 style="color:{mood_color}">Your Mood</h3>
+                <p style="font-size:24px; margin-bottom:0;">{mood}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {accent_color}">
+                <h3 style="color:{accent_color}">Wellness Score</h3>
+                <p style="font-size:24px; margin-bottom:0;">{mood_score:.2f}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {mood_color}">
+                <h3 style="color:{mood_color}">Burnout Risk</h3>
+                <p style="font-size:24px; margin-bottom:0;">{risk}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Show appropriate animation
+        if risk == "Low":
+            anim = load_lottie_url("https://assets4.lottiefiles.com/packages/lf20_yo4lqexz.json")
+        elif risk == "Moderate":
+            anim = load_lottie_url("https://assets1.lottiefiles.com/packages/lf20_yo4lqexz.json")
+        else:
+            anim = load_lottie_url("https://assets3.lottiefiles.com/packages/lf20_yo4lqexz.json")
+        
+        if anim:
+            st_lottie(anim, height=150, key="mood_anim")
+        
+        # Move the quiz button outside of any form
+        if risk == "High":
+            st.markdown(f"""
+            <div class="warning-card">
+                <h3>Let's check in with a quick wellness quiz</h3>
+                <p>This will help us provide more personalized suggestions for you.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("Take the Wellness Quiz"):
+                st.session_state.page = "🌿 Wellness Guide"
+                st.rerun()
+        else:
+            if st.button("View Wellness Suggestions"):
+                st.session_state.page = "🌿 Wellness Guide"
+                st.rerun()
+    
+    # Form for mood input
     with st.form("mood_form"):
         st.subheader("Daily Reflection")
         journal_entry = st.text_area("How are you feeling today? What's on your mind?", height=150)
@@ -231,6 +288,7 @@ elif st.session_state.page == "📊 Mood Check":
                     0.15 * exercise_score -
                     0.1 * (1 - screen_score)
                 )
+                
                 # Determine risk level
                 if mood_score > 0.4:
                     mood = "Thriving 🌸"
@@ -248,62 +306,12 @@ elif st.session_state.page == "📊 Mood Check":
                 # Store results
                 st.session_state.mood_score = mood_score
                 st.session_state.risk = risk
+                st.session_state.mood = mood
+                st.session_state.mood_color = mood_color
                 st.session_state.mood_analyzed = True
                 
-                # Display results
-                st.success("Analysis complete!")
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(f"""
-                    <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {mood_color}">
-                        <h3 style="color:{mood_color}">Your Mood</h3>
-                        <p style="font-size:24px; margin-bottom:0;">{mood}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown(f"""
-                    <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {accent_color}">
-                        <h3 style="color:{accent_color}">Wellness Score</h3>
-                        <p style="font-size:24px; margin-bottom:0;">{mood_score:.2f}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col3:
-                    st.markdown(f"""
-                    <div style="background-color:{card_bg}; padding:15px; border-radius:10px; border-left:4px solid {mood_color}">
-                        <h3 style="color:{mood_color}">Burnout Risk</h3>
-                        <p style="font-size:24px; margin-bottom:0;">{risk}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # Show appropriate animation
-                if risk == "Low":
-                    anim = load_lottie_url("https://assets4.lottiefiles.com/packages/lf20_yo4lqexz.json")
-                elif risk == "Moderate":
-                    anim = load_lottie_url("https://assets1.lottiefiles.com/packages/lf20_yo4lqexz.json")
-                else:
-                    anim = load_lottie_url("https://assets3.lottiefiles.com/packages/lf20_yo4lqexz.json")
-                
-                if anim:
-                    st_lottie(anim, height=150, key="mood_anim")
-                
-                # Suggest next steps
-                if risk == "High":
-                    st.markdown(f"""
-                    <div class="warning-card">
-                        <h3>Let's check in with a quick wellness quiz</h3>
-                        <p>This will help us provide more personalized suggestions for you.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button("Take the Wellness Quiz"):
-                        st.session_state.page = "🌿 Wellness Guide"
-                        st.rerun()
-                else:
-                    if st.button("View Wellness Suggestions"):
-                        st.session_state.page = "🌿 Wellness Guide"
-                        st.rerun()
+                # Rerun to show results
+                st.rerun()
             else:
                 st.warning("Please share how you're feeling to get your mood analysis")
 
