@@ -714,25 +714,26 @@ elif st.session_state.page == "🌿 Wellness Guide":
         if st.button("💬 Chat with Terra", use_container_width=True):
             st.session_state.page = "💬 Terra Chat"
             st.rerun()
-
-# ========= Page 4: Chatbot ========
+# ========= Page 4: Terra Q&A ========
 elif st.session_state.page == "💬 Terra Chat":
-    st.title("💬 Wellness Companion")
+    st.title("🌿 Wellness Guide")
     
     # Gender toggle
-    st.markdown(f"""
-    <div class="gender-tabs">
-        <div class="gender-tab {'active' if st.session_state.chat_gender == 'female' else ''}" onclick="window.streamlitSessionState.set('chat_gender','female');window.streamlitSessionState.set('rerun',true)">🌸 For Her</div>
-        <div class="gender-tab {'active' if st.session_state.chat_gender == 'male' else ''}" onclick="window.streamlitSessionState.set('chat_gender','male');window.streamlitSessionState.set('rerun',true)">🌿 For Him</div>
-    </div>
-    """, unsafe_allow_html=True)
+    cols = st.columns(2)
+    with cols[0]:
+        if st.button("🌸 For Her", use_container_width=True, 
+                   type="primary" if st.session_state.chat_gender == "female" else "secondary"):
+            st.session_state.chat_gender = "female"
+    with cols[1]:
+        if st.button("🌱 For Him", use_container_width=True, 
+                   type="primary" if st.session_state.chat_gender == "male" else "secondary"):
+            st.session_state.chat_gender = "male"
     
     # Show appropriate content based on gender
     if st.session_state.chat_gender == "female":
         st.markdown(f"""
         <div class="result-card">
-            <p style="font-size: 16px;">Hello {st.session_state.get('name', 'friend')}! Let's explore wellness topics that matter to you. 
-            Select a question or ask your own.</p>
+            <p>Hello {st.session_state.get('name', 'friend')}! Explore wellness topics that matter to you.</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -744,264 +745,71 @@ elif st.session_state.page == "💬 Terra Chat":
             index=0
         )
         
-        # Common questions for women
-        st.subheader("Common Wellness Questions")
+        # Common questions and answers for women
+        questions_answers = {
+            "General": [
+                {
+                    "q": "How can I boost my energy naturally during the day?",
+                    "a": "Like sunlight nourishes plants, try these energy boosters:\n1. Start with a protein-rich breakfast\n2. Take short movement breaks every hour\n3. Stay hydrated with water and herbal teas\n4. Get 10 minutes of morning sunlight"
+                },
+                {
+                    "q": "What are quick stress-relief techniques for work?",
+                    "a": "As gentle as a breeze through leaves:\n1. 4-7-8 breathing (inhale 4s, hold 7s, exhale 8s)\n2. Desk stretches every hour\n3. Sip chamomile or peppermint tea\n4. Listen to nature sounds for 2 minutes"
+                }
+            ],
+            "Nutrition": [
+                {
+                    "q": "What foods help with hormonal balance?",
+                    "a": "Nature's hormonal helpers:\n• Leafy greens (kale, spinach)\n• Omega-3s (salmon, flaxseeds)\n• Cruciferous veggies (broccoli, cauliflower)\n• Berries (antioxidant-rich)\n• Nuts and seeds (especially walnuts and pumpkin seeds)"
+                }
+            ],
+            "Cycle Health": [
+                {
+                    "q": "How can I support my body during this phase?",
+                    "a": "During your period:\n1. Prioritize iron-rich foods\n2. Use heat therapy for cramps\n3. Try gentle yoga or walking\n4. Allow extra rest when needed" 
+                    if cycle_phase == "Menstruation (Days 1-5)" else
+                    "During ovulation:\n1. Focus on fiber-rich foods\n2. Engage in strength training\n3. Stay well hydrated\n4. Protect your skin from sun exposure"
+                }
+            ]
+        }
         
-        tabs = st.tabs(["🌱 General", "🍵 Nutrition", "😴 Sleep", "🧘 Mindfulness", "🩸 Cycle Health"])
-        
-        with tabs[0]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I boost my energy naturally during the day?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I boost my energy naturally during the day?</h4>
-                <p>Discover natural ways to combat fatigue</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are some quick stress-relief techniques I can do at work?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What are some quick stress-relief techniques I can do at work?</h4>
-                <p>Office-friendly relaxation methods</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I create a better morning routine?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I create a better morning routine?</h4>
-                <p>Start your day with intention</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[1]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What foods help with hormonal balance?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What foods help with hormonal balance?</h4>
-                <p>Nutrition for cycle harmony</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','Are there specific nutrients I need more of during my period?');window.streamlitSessionState.set('rerun',true)">
-                <h4>Are there specific nutrients I need more of during my period?</h4>
-                <p>Eating for menstrual health</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are good snacks for PCOS management?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What are good snacks for PCOS management?</h4>
-                <p>Blood sugar balancing ideas</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[2]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','Why do I feel more tired before my period?');window.streamlitSessionState.set('rerun',true)">
-                <h4>Why do I feel more tired before my period?</h4>
-                <p>Understanding progesterone's effects</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I sleep better during PMS?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I sleep better during PMS?</h4>
-                <p>Tips for the luteal phase</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What\\'s the ideal sleep temperature for women?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What's the ideal sleep temperature for women?</h4>
-                <p>Body temperature regulation</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[3]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How does meditation affect female hormones?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How does meditation affect female hormones?</h4>
-                <p>The mind-body connection</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What type of yoga is best for each cycle phase?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What type of yoga is best for each cycle phase?</h4>
-                <p>Cycle-syncing movement</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I practice self-love during menstruation?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I practice self-love during menstruation?</h4>
-                <p>Honoring your body's rhythm</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[4]:
-            if cycle_phase != "Not applicable":
-                st.markdown(f"""
-                <div class="cycle-phase">
-                    {cycle_phase} phase selected
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("""
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I support my body during this phase?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>How can I support my body during this phase?</h4>
-                    <p>Phase-specific wellness tips</p>
-                </div>
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What foods are most nourishing right now?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>What foods are most nourishing right now?</h4>
-                    <p>Nutritional needs for this phase</p>
-                </div>
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What type of exercise is best during this phase?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>What type of exercise is best during this phase?</h4>
-                    <p>Movement recommendations</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I track my cycle for better wellness?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>How can I track my cycle for better wellness?</h4>
-                    <p>Understanding your patterns</p>
-                </div>
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are signs of hormonal imbalance to watch for?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>What are signs of hormonal imbalance to watch for?</h4>
-                    <p>When to seek help</p>
-                </div>
-                <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How does stress affect menstrual health?');window.streamlitSessionState.set('rerun',true)">
-                    <h4>How does stress affect menstrual health?</h4>
-                    <p>The cortisol connection</p>
-                </div>
-                """, unsafe_allow_html=True)
-    
     else:  # Male content
         st.markdown(f"""
         <div class="result-card">
-            <p style="font-size: 16px;">Hello {st.session_state.get('name', 'friend')}! Let's explore wellness topics that matter to you. 
-            Select a question or ask your own.</p>
+            <p>Hello {st.session_state.get('name', 'friend')}! Explore wellness topics that matter to you.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Common questions for men
-        st.subheader("Common Wellness Questions")
-        
-        tabs = st.tabs(["🌱 General", "🍗 Nutrition", "💪 Fitness", "😴 Sleep", "🧠 Mental Health"])
-        
-        with tabs[0]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I improve my focus and productivity naturally?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I improve my focus and productivity naturally?</h4>
-                <p>Beyond caffeine solutions</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are signs of testosterone imbalance?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What are signs of testosterone imbalance?</h4>
-                <p>Hormonal health awareness</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I build a sustainable morning routine?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I build a sustainable morning routine?</h4>
-                <p>Starting strong</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[1]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What nutrients are most important for male health?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What nutrients are most important for male health?</h4>
-                <p>Beyond protein needs</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How does alcohol affect male hormones?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How does alcohol affect male hormones?</h4>
-                <p>The testosterone connection</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are good plant-based protein sources?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What are good plant-based protein sources?</h4>
-                <p>Vegetarian options</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[2]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How often should I take rest days?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How often should I take rest days?</h4>
-                <p>Recovery strategies</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What exercises help prevent common male injuries?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What exercises help prevent common male injuries?</h4>
-                <p>Prehab routines</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I maintain muscle as I age?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I maintain muscle as I age?</h4>
-                <p>Strength preservation</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[3]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','Why do men often sleep hotter than women?');window.streamlitSessionState.set('rerun',true)">
-                <h4>Why do men often sleep hotter than women?</h4>
-                <p>Body temperature regulation</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How does sleep affect testosterone levels?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How does sleep affect testosterone levels?</h4>
-                <p>The hormone-sleep connection</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What\\'s the best sleep position for back health?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What's the best sleep position for back health?</h4>
-                <p>Spinal alignment</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with tabs[4]:
-            st.markdown("""
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can men recognize signs of depression?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can men recognize signs of depression?</h4>
-                <p>Beyond "feeling sad"</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','What are healthy ways to manage stress?');window.streamlitSessionState.set('rerun',true)">
-                <h4>What are healthy ways to manage stress?</h4>
-                <p>Beyond avoidance</p>
-            </div>
-            <div class="question-card" onclick="window.streamlitSessionState.set('chat_input','How can I improve emotional communication?');window.streamlitSessionState.set('rerun',true)">
-                <h4>How can I improve emotional communication?</h4>
-                <p>Building vulnerability</p>
-            </div>
-            """, unsafe_allow_html=True)
+        # Common questions and answers for men
+        questions_answers = {
+            "General": [
+                {
+                    "q": "How can I improve focus naturally?",
+                    "a": "Sharpen your mind like a well-honed tool:\n1. Try the Pomodoro technique (25min work/5min break)\n2. Eliminate distractions during deep work\n3. Stay hydrated - even mild dehydration affects focus\n4. Take short walks to reset your attention"
+                }
+            ],
+            "Fitness": [
+                {
+                    "q": "How often should I take rest days?",
+                    "a": "Like fields need fallow seasons:\n• Beginners: 2-3 rest days/week\n• Intermediate: 1-2 rest days/week\n• Advanced: 1 rest day/week (active recovery on some days)\nListen to your body - more rest when sore or fatigued"
+                }
+            ]
+        }
     
-    # Chat interface
-    st.markdown("---")
-    st.subheader("Ask Terra Anything")
+    # Display questions by category
+    tabs = st.tabs(list(questions_answers.keys()))
     
-    # Initialize chat history if not exists
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [
-            {"role": "assistant", "content": f"Hi {st.session_state.get('name', 'friend')}! I'm Terra, your wellness guide. How can I help you today?"}
-        ]
+    for tab, category in zip(tabs, questions_answers.keys()):
+        with tab:
+            for qa in questions_answers[category]:
+                with st.expander(qa["q"]):
+                    st.markdown(f"""
+                    <div style="padding:12px; border-radius:8px; background-color:{card_bg};">
+                        {qa["a"].replace('\n', '<br>')}
+                    </div>
+                    """, unsafe_allow_html=True)
     
-    # Display chat messages
-    for message in st.session_state.chat_history:
-        if message["role"] == "user":
-            st.markdown(f"""
-            <div class="chat-message user-message">
-                <p><strong>You:</strong> {message["content"]}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="chat-message bot-message">
-                <p><strong>Terra:</strong> {message["content"]}</p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Chat input
-    user_input = st.chat_input("Type your wellness question here...")
-    
-    if user_input:
-        # Add user message to chat history
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
-        try:
-            # Generate response
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": f"You are Terra, a friendly wellness assistant. You specialize in {st.session_state.chat_gender}-specific health. Use metaphors from nature and keep responses under 3 sentences."},
-                    *[{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.chat_history]
-                ],
-                temperature=0.7,
-            )
-            
-            # Get the assistant's reply
-            assistant_reply = response.choices[0].message.content
-            
-            # Add assistant response to chat history
-            st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-            
-            # Rerun to update the chat display
-            st.rerun()
-            
-        except Exception as e:
-            error_msg = f"I'm having trouble connecting right now. Please try again later. (Error: {str(e)})"
-            st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
-            st.rerun()
-    
-    # Quick suggestions
+    # Quick tips section
     st.markdown("""
     <div class="suggestion-card">
         <h4>💡 Quick Wellness Tips</h4>
