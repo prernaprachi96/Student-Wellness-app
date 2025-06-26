@@ -205,7 +205,7 @@ st.markdown(
 )
 
 # ========= Pages & Navigation ========
-pages = ["🌱 Welcome", "📊 Mood Check", "🌿 Wellness Guide", "📝 Feedback"]
+pages = ["🌱 Welcome", "📊 Mood Check", "Wellness Guide", "📝 Feedback"]
 
 # Initialize session state
 if 'page' not in st.session_state:
@@ -331,7 +331,7 @@ elif st.session_state.page == "📊 Mood Check":
         col1, col2 = st.columns(2)
         with col1:
             if st.button("View Wellness Suggestions", use_container_width=True):
-                st.session_state.page = "🌿 Wellness Guide"
+                st.session_state.page = "Wellness Guide"
                 st.rerun()
         with col2:
             if st.button("Do Another Check-In", use_container_width=True):
