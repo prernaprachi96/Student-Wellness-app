@@ -12,7 +12,7 @@ import openai
 import random
 
 # Configure OpenAI - replace with your API key
-openai.api_key = "YOUR_OPENAI_API_KEY"
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # ========= Helper Functions ========
 @st.cache_data(ttl=3600)
