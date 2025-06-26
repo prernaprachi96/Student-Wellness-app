@@ -445,9 +445,9 @@ elif st.session_state.page == "📊 Mood Check":
 elif st.session_state.page == "🌿 Wellness Guide":
     st.title("🌱 Personalized Wellness Guide")
     
-    # Get user data
+    # Get user data from session state with proper defaults
     name = st.session_state.get("name", "friend")
-    risk = st.session_state.mood_data.get("risk", "Moderate")
+    risk = st.session_state.mood_data.get("risk", "Moderate")  # This line is crucial
     gender = st.session_state.get("gender", "Prefer not to say")
     
     # Header with animation
@@ -455,24 +455,26 @@ elif st.session_state.page == "🌿 Wellness Guide":
     if anim:
         st_lottie(anim, height=120, key="guide_header")
     
-    # Burnout quiz for high risk users
-if risk == "High" and "quiz_complete" not in st.session_state:
-    st.markdown(f"""
-    <div class="warning-card">
-        <h3>🌻 Wellness Check-In Quiz</h3>
-        <p>Let's understand what areas need attention, {name}.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Initialize quiz answers with default values if not exists
-    if "quiz_answers" not in st.session_state:
-        st.session_state.quiz_answers = {
-            "energy": "Normal",
-            "sleep": "Restful",
-            "concentration": "Normal",
-            "motivation": "Normal",
-            "stress": "Manageable"
-        }
+    # Burnout quiz for high risk users - MAKE SURE THIS IS PROPERLY INDENTED
+    if risk == "High" and "quiz_complete" not in st.session_state:
+        st.markdown(f"""
+        <div class="warning-card">
+            <h3>🌻 Wellness Check-In Quiz</h3>
+            <p>Let's understand what areas need attention, {name}.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Initialize quiz answers with default values if not exists
+        if "quiz_answers" not in st.session_state:
+            st.session_state.quiz_answers = {
+                "energy": "Normal",
+                "sleep": "Restful", 
+                "concentration": "Normal",
+                "motivation": "Normal",
+                "stress": "Manageable"
+            }
+        
+        # Rest of your quiz code...
     
     # Quiz questions
     questions = [
