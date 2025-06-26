@@ -456,38 +456,49 @@ elif st.session_state.page == "🌿 Wellness Guide":
         st_lottie(anim, height=120, key="guide_header")
     
     # Burnout quiz for high risk users
-    if risk == "High" and "quiz_complete" not in st.session_state:
-        st.markdown(f"""
-        <div class="warning-card">
-            <h3>🌻 Wellness Check-In Quiz</h3>
-            <p>Let's understand what areas need attention, {name}.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Quiz questions
-        questions = [
-            ("1. How has your energy level been lately?", "energy", ["Normal", "Somewhat low", "Very low"]),
-            ("2. How has your sleep been?", "sleep", ["Restful", "Occasionally restless", "Frequently disrupted"]),
-            ("3. How is your ability to concentrate?", "concentration", ["Normal", "Somewhat difficult", "Very difficult"]),
-            ("4. How is your motivation for daily activities?", "motivation", ["Normal", "Somewhat reduced", "Very reduced"]),
-            ("5. How would you describe your stress levels?", "stress", ["Manageable", "Sometimes overwhelming", "Constantly overwhelming"])
-        ]
-        
-        # Initialize quiz answers if not exists
-        if "quiz_answers" not in st.session_state:
-            st.session_state.quiz_answers = {q[1]: None for q in questions}
-        
-        # Display quiz questions
-        for q_text, q_key, options in questions:
-            st.write(q_text)
-            selected = st.radio(
-                q_text,
-                options,
-                index=options.index(st.session_state.quiz_answers[q_key]) if st.session_state.quiz_answers[q_key] else 0,
-                key=q_key,
-                label_visibility="collapsed"
-            )
-            st.session_state.quiz_answers[q_key] = selected
+if risk == "High" and "quiz_complete" not in st.session_state:
+    st.markdown(f"""
+    <div class="warning-card">
+        <h3>🌻 Wellness Check-In Quiz</h3>
+        <p>Let's understand what areas need attention, {name}.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Initialize quiz answers with default values if not exists
+    if "quiz_answers" not in st.session_state:
+        st.session_state.quiz_answers = {
+            "energy": "Normal",
+            "sleep": "Restful",
+            "concentration": "Normal",
+            "motivation": "Normal",
+            "stress": "Manageable"
+        }
+    
+    # Quiz questions
+    questions = [
+        ("1. How has your energy level been lately?", "energy", ["Normal", "Somewhat low", "Very low"]),
+        ("2. How has your sleep been?", "sleep", ["Restful", "Occasionally restless", "Frequently disrupted"]),
+        ("3. How is your ability to concentrate?", "concentration", ["Normal", "Somewhat difficult", "Very difficult"]),
+        ("4. How is your motivation for daily activities?", "motivation", ["Normal", "Somewhat reduced", "Very reduced"]),
+        ("5. How would you describe your stress levels?", "stress", ["Manageable", "Sometimes overwhelming", "Constantly overwhelming"])
+    ]
+    
+    # Display quiz questions with safe default selection
+    for q_text, q_key, options in questions:
+        st.write(q_text)
+        current_value = st.session_state.quiz_answers.get(q_key, options[0])
+        selected = st.radio(
+            q_text,
+            options,
+            index=options.index(current_value),
+            key=f"quiz_{q_key}",  # Added unique prefix to avoid key conflicts
+            label_visibility="collapsed"
+        )
+        st.session_state.quiz_answers[q_key] = selected
+    
+    if st.button("Get My Recommendations"):
+        st.session_state.quiz_complete = True
+        st.rerun()
         
         # Submit button
         if st.button("Get My Recommendations"):
