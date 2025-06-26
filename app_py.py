@@ -426,7 +426,6 @@ elif st.session_state.page == "📊 Mood Check":
                 else:
                     st.warning("Please share how you're feeling to get your mood analysis")
 
-
 # ========= Page 3: Wellness Guide ========
 elif st.session_state.page == "Wellness Guide":
     st.title(f"🌿 Personalized Wellness Guide for {st.session_state.get('name', 'you')}")
@@ -725,7 +724,6 @@ elif st.session_state.page == "Wellness Guide":
         if st.button("💌 Give Feedback", use_container_width=True):
             st.session_state.page = "📝 Feedback"
             st.rerun()
-
 # ========= Page 4: Feedback ========
 elif st.session_state.page == "📝 Feedback":
     st.title("💌 Share Your Thoughts")
