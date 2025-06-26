@@ -25,21 +25,6 @@ def load_lottie_url(url):
     except Exception:
         return None
 
-def generate_chat_response(prompt):
-    """Generate chatbot response using OpenAI"""
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a friendly, nature-inspired wellness assistant named Terra. You speak in warm, compassionate tones with occasional plant/animal metaphors. Keep responses under 3 sentences."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"I'm having trouble connecting right now. Please try again later. ({str(e)})"
-
 # Create folders if not exist
 os.makedirs("data", exist_ok=True)
 
@@ -220,7 +205,7 @@ st.markdown(
 )
 
 # ========= Pages & Navigation ========
-pages = ["🌱 Welcome", "📊 Mood Check", "🌿 Wellness Guide", "💬 Terra Chat", "📝 Feedback"]
+pages = ["🌱 Welcome", "📊 Mood Check", "🌿 Wellness Guide", "📝 Feedback"]
 
 # Initialize session state
 if 'page' not in st.session_state:
@@ -723,197 +708,8 @@ elif st.session_state.page == "🌿 Wellness Guide":
         if st.button("🔙 Back to Mood Check", use_container_width=True):
             st.session_state.page = "📊 Mood Check"
             st.rerun()
-    with col2:
-        if st.button("💬 Chat with Terra", use_container_width=True):
-            st.session_state.page = "💬 Terra Chat"
-            st.rerun()
-# ========= Page 4: Wellness Resources ========
-elif st.session_state.page == "💬 Terra Chat":
-    st.title("🌿 Personalized Wellness Resources")
-    
-    # Get user data from mood check
-    mood = st.session_state.mood_data.get("mood", "Balanced 🌿")
-    risk = st.session_state.mood_data.get("risk", "Moderate")
-    mood_score = st.session_state.mood_data.get("mood_score", 0.5)
-    gender = st.session_state.get("gender", "Prefer not to say")
-    
-    # Display user's current status
-    st.markdown(f"""
-    <div class="result-card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h4>Your Current Status</h4>
-                <p>Mood: <strong>{mood}</strong></p>
-                <p>Wellness Score: <strong>{mood_score:.2f}/1.0</strong></p>
-            </div>
-            <div>
-                <p>Burnout Risk: <strong>{risk}</strong></p>
-                <p>Gender: <strong>{gender}</strong></p>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # ===== Personalized Wellness Guide =====
-    st.markdown("## 🌱 Personalized Wellness Guide")
-    
-    if risk == "High":
-        st.markdown(f"""
-        <div class="warning-card">
-            <h3>Recovery Focus</h3>
-            <p>Your responses indicate you may be experiencing significant stress. Here's your customized recovery plan:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        recovery_plan = [
-            "🧠 **Mental Reset**: Practice 5-10 minutes of guided meditation daily",
-            "💤 **Sleep Restoration**: Aim for 7-9 hours with consistent bedtime",
-            "🍵 **Nourishment**: Focus on anti-inflammatory foods (leafy greens, berries, nuts)",
-            "🚶 **Gentle Movement**: 20-30 minute walks in nature, no intense workouts",
-            "📵 **Digital Boundaries**: Set screen time limits, especially before bed"
-        ]
-        
-        for item in recovery_plan:
-            st.markdown(f"""
-            <div class="routine-item">
-                <div class="routine-activity">{item}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-    elif risk == "Moderate":
-        st.markdown(f"""
-        <div class="suggestion-card">
-            <h3>Balance Maintenance</h3>
-            <p>You're doing okay but could use some tuning. Here's your wellness tune-up:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        balance_plan = [
-            "🌅 **Morning Routine**: Start with sunlight exposure + hydration",
-            "🍎 **Nutrition**: Ensure protein with each meal, reduce processed sugars",
-            "🧘 **Mindfulness**: Try 3-minute breathing breaks 2x/day",
-            "🏃 **Movement**: 30 minutes activity daily (walking counts!)",
-            "💤 **Sleep**: Maintain consistent sleep-wake times"
-        ]
-        
-        for item in balance_plan:
-            st.markdown(f"""
-            <div class="routine-item">
-                <div class="routine-activity">{item}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-    else:  # Low risk
-        st.markdown(f"""
-        <div class="suggestion-card">
-            <h3>Thriving & Growth</h3>
-            <p>You're doing great! Here's how to maintain and enhance your wellness:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        growth_plan = [
-            "🌱 **New Challenges**: Try a new wellness practice (cold exposure, breathwork)",
-            "📚 **Learning**: Explore a book/podcast on personal growth",
-            "🤝 **Connection**: Nurture important relationships",
-            "🌍 **Nature**: Spend extra time outdoors this week",
-            "🙏 **Gratitude**: Keep a daily gratitude journal"
-        ]
-        
-        for item in growth_plan:
-            st.markdown(f"""
-            <div class="routine-item">
-                <div class="routine-activity">{item}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # ===== Sample Balanced Day =====
-    st.markdown("## ⏰ Sample Balanced Day")
-    
-    if risk == "High":
-        st.markdown(f"""
-        <div class="warning-card">
-            <h4>Gentle Recovery Day</h4>
-            <p>This sample day is designed to help you recover without overwhelm:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        recovery_day = [
-            {"time": "7:30 AM", "activity": "🌅 Gentle wake-up, no alarm if possible"},
-            {"time": "8:00 AM", "activity": "🍵 Herbal tea + light stretching"},
-            {"time": "9:00 AM", "activity": "📝 Journal 3 things you're grateful for"},
-            {"time": "12:00 PM", "activity": "🥗 Nourishing lunch away from screens"},
-            {"time": "3:00 PM", "activity": "🚶‍♀️ 15-min nature walk (even just outside)"},
-            {"time": "6:30 PM", "activity": "🍲 Light, easy-to-digest dinner"},
-            {"time": "8:00 PM", "activity": "📖 Relaxing activity (reading, music)"},
-            {"time": "9:30 PM", "activity": "🛀 Warm bath or shower before bed"}
-        ]
-        
-    elif risk == "Moderate":
-        st.markdown(f"""
-        <div class="suggestion-card">
-            <h4>Balanced Routine Day</h4>
-            <p>A sustainable day that balances activity and recovery:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        recovery_day = [
-            {"time": "7:00 AM", "activity": "🌞 Morning sunlight + glass of water"},
-            {"time": "7:30 AM", "activity": "🧘 10-min yoga or stretching"},
-            {"time": "8:30 AM", "activity": "🍳 Protein-rich breakfast"},
-            {"time": "12:30 PM", "activity": "🥙 Balanced lunch with veggies"},
-            {"time": "3:00 PM", "activity": "🚶‍♂️ 20-min walk (outside if possible)"},
-            {"time": "6:00 PM", "activity": "🍗 Dinner with lean protein"},
-            {"time": "8:00 PM", "activity": "📱 Begin screen wind-down"},
-            {"time": "10:00 PM", "activity": "😴 Bedtime (aim for 7-8 hours sleep)"}
-        ]
-        
-    else:  # Low risk
-        st.markdown(f"""
-        <div class="suggestion-card">
-            <h4>Optimal Wellness Day</h4>
-            <p>A day designed to maximize your already great wellness:</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        recovery_day = [
-            {"time": "6:30 AM", "activity": "🌅 Early wake-up + sunlight exposure"},
-            {"time": "7:00 AM", "activity": "🏋️‍♀️ Morning workout or movement"},
-            {"time": "8:00 AM", "activity": "🍓 Nutrient-dense breakfast"},
-            {"time": "12:00 PM", "activity": "🥗 Power lunch with varied colors"},
-            {"time": "2:00 PM", "activity": "🧠 Focused deep work session"},
-            {"time": "5:00 PM", "activity": "🚴‍♂️ Active commute or exercise"},
-            {"time": "7:00 PM", "activity": "🍽️ Mindful, relaxed dinner"},
-            {"time": "9:00 PM", "activity": "📚 Learning or creative time"},
-            {"time": "10:30 PM", "activity": "😴 Wind down for quality sleep"}
-        ]
-    
-    # Display the sample day
-    for item in recovery_day:
-        st.markdown(f"""
-        <div class="routine-item">
-            <div class="routine-time">{item['time']}</div>
-            <div class="routine-activity">{item['activity']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Quick tips section
-    st.markdown("""
-    <div class="suggestion-card">
-        <h4>💡 Quick Wellness Tips</h4>
-        <ul>
-            <li>Set phone to grayscale mode in evenings</li>
-            <li>Try "5-4-3-2-1" grounding technique when stressed</li>
-            <li>Add leafy greens to one meal daily</li>
-            <li>Practice 2-minute breathing breaks</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Single back button for navigation
-    if st.button("🔙 Back to Main Menu", use_container_width=True):
-        st.session_state.page = "🌱 Welcome"
-        st.rerun()
-# ========= Page 5: Feedback ========
+
+# ========= Page 4: Feedback ========
 elif st.session_state.page == "📝 Feedback":
     st.title("💌 Share Your Thoughts")
     
