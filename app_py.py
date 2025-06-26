@@ -426,97 +426,294 @@ elif st.session_state.page == "📊 Mood Check":
                 else:
                     st.warning("Please share how you're feeling to get your mood analysis")
 
+
 # ========= Page 3: Wellness Guide ========
 elif st.session_state.page == "Wellness Guide":
-    st.title("Personalized Wellness Guide")
+    st.title(f"🌿 Personalized Wellness Guide for {st.session_state.get('name', 'you')}")
     
-    # Get user data from session state with proper defaults
+    # Get user data
     name = st.session_state.get("name", "friend")
     risk = st.session_state.mood_data.get("risk", "Moderate")
     gender = st.session_state.get("gender", "Prefer not to say")
+    age = st.session_state.get("age", 30)
+    lifestyle = st.session_state.get("lifestyle", "Balanced")
     
     # Header with animation
     anim = load_lottie_url("https://assets1.lottiefiles.com/packages/lf20_yo4lqexz.json")
     if anim:
         st_lottie(anim, height=120, key="guide_header")
     
-    # Burnout quiz for high risk users
-    if risk == "High":
-        if "quiz_complete" not in st.session_state or not st.session_state.quiz_complete:
-            st.markdown(f"""
-            <div class="warning-card">
-                <h3>Wellness Check-In Quiz</h3>
-                <p>Let's understand what areas need attention, {name}.</p>
+    # Wellness Score Dashboard
+    st.markdown(f"""
+    <div class="result-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3>Your Wellness Dashboard</h3>
+                <p>Risk Level: <strong>{risk}</strong></p>
+                <p>Age: <strong>{age}</strong> | Lifestyle: <strong>{lifestyle}</strong></p>
             </div>
-            """, unsafe_allow_html=True)
-            
-            # Initialize quiz answers if not exists
-            if "quiz_answers" not in st.session_state:
-                st.session_state.quiz_answers = {
-                    "energy": "Normal",
-                    "sleep": "Restful", 
-                    "concentration": "Normal",
-                    "motivation": "Normal",
-                    "stress": "Manageable"
-                }
-            
-            # Quiz questions
-            questions = [
-                ("1. How has your energy level been lately?", "energy", ["Normal", "Somewhat low", "Very low"]),
-                ("2. How has your sleep been?", "sleep", ["Restful", "Occasionally restless", "Frequently disrupted"]),
-                ("3. How is your ability to concentrate?", "concentration", ["Normal", "Somewhat difficult", "Very difficult"]),
-                ("4. How is your motivation for daily activities?", "motivation", ["Normal", "Somewhat reduced", "Very reduced"]),
-                ("5. How would you describe your stress levels?", "stress", ["Manageable", "Sometimes overwhelming", "Constantly overwhelming"])
-            ]
-            
-            # Display quiz questions
-            for q_text, q_key, options in questions:
-                st.write(q_text)
-                current_value = st.session_state.quiz_answers.get(q_key, options[0])
-                selected = st.radio(
-                    q_text,
-                    options,
-                    index=options.index(current_value),
-                    key=f"quiz_{q_key}",
-                    label_visibility="collapsed"
-                )
-                st.session_state.quiz_answers[q_key] = selected
-            
-            if st.button("Get My Recommendations"):
-                st.session_state.quiz_complete = True
-                st.rerun()
-        
-        else:  # Quiz completed - show recommendations
-            # Analyze quiz results
-            score_mapping = {
-                "Normal": 0, "Restful": 0, "Manageable": 0,
-                "Somewhat low": 1, "Occasionally restless": 1, "Somewhat difficult": 1, 
-                "Somewhat reduced": 1, "Sometimes overwhelming": 1,
-                "Very low": 2, "Frequently disrupted": 2, "Very difficult": 2,
-                "Very reduced": 2, "Constantly overwhelming": 2
-            }
-            
-            total_score = sum(score_mapping[ans] for ans in st.session_state.quiz_answers.values())
-            
-            # Determine recommendation level
-            if total_score >= 8:
-                recommendation_level = "professional"
-            elif total_score >= 5:
-                recommendation_level = "intensive_self_care"
-            else:
-                recommendation_level = "self_care"
-            
-            # Show recommendations
-            st.markdown(f"""
-            <div class="warning-card">
-                <h3>🌿 Your Personalized Recovery Plan</h3>
-                <p>Based on your responses, here's what we recommend:</p>
+            <div style="text-align: right;">
+                <p style="font-size: 24px; margin: 0; color: {st.session_state.mood_data['mood_color']}">
+                    {st.session_state.mood_data['mood_score']:.1f}/10
+                </p>
+                <p>Wellness Score</p>
             </div>
-            """, unsafe_allow_html=True)
-            
-            # [Rest of your recommendation code remains the same...]
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # [Rest of your Wellness Guide code for Moderate and Low risk remains the same...]
+    # Tab system for different wellness aspects
+    tab1, tab2, tab3, tab4 = st.tabs(["🌱 Daily Routine", "💤 Sleep", "🍎 Nutrition", "🧘 Mindfulness"])
+    
+    with tab1:
+        st.subheader("Personalized Daily Routine")
+        
+        # Time-based routine suggestions
+        st.markdown("""
+        <div class="suggestion-card">
+            <h4>⏰ Suggested Daily Schedule</h4>
+            <p>Based on your risk level and lifestyle, here's an optimal daily routine:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if risk == "High":
+            routine = [
+                {"time": "7:00 AM", "activity": "Gentle wake-up with sunlight exposure"},
+                {"time": "7:15 AM", "activity": "5-minute stretching or yoga"},
+                {"time": "8:00 AM", "activity": "Balanced breakfast with protein"},
+                {"time": "12:00 PM", "activity": "Short walk in nature (10-15 min)"},
+                {"time": "3:00 PM", "activity": "Mindfulness break (5 min deep breathing)"},
+                {"time": "6:30 PM", "activity": "Light dinner with vegetables"},
+                {"time": "8:30 PM", "activity": "Digital detox (no screens)"},
+                {"time": "9:30 PM", "activity": "Relaxing bedtime routine"}
+            ]
+        elif risk == "Moderate":
+            routine = [
+                {"time": "6:30 AM", "activity": "Morning sunlight + hydration"},
+                {"time": "7:00 AM", "activity": "15-minute movement (yoga/walk)"},
+                {"time": "8:00 AM", "activity": "Protein-rich breakfast"},
+                {"time": "12:30 PM", "activity": "Balanced lunch with greens"},
+                {"time": "3:00 PM", "activity": "Quick stretch or walk"},
+                {"time": "6:00 PM", "activity": "Exercise (30-45 min)"},
+                {"time": "8:00 PM", "activity": "Screen-free wind down"},
+                {"time": "10:00 PM", "activity": "Bedtime routine"}
+            ]
+        else:
+            routine = [
+                {"time": "6:00 AM", "activity": "Morning workout or run"},
+                {"time": "7:00 AM", "activity": "Healthy breakfast with complex carbs"},
+                {"time": "12:00 PM", "activity": "Nutrient-dense lunch"},
+                {"time": "5:00 PM", "activity": "Intensive exercise session"},
+                {"time": "7:00 PM", "activity": "Light, early dinner"},
+                {"time": "9:00 PM", "activity": "Reading or creative activity"},
+                {"time": "10:30 PM", "activity": "Relaxation before sleep"}
+            ]
+        
+        for item in routine:
+            st.markdown(f"""
+            <div class="routine-item">
+                <div class="routine-time">{item['time']}</div>
+                <div class="routine-activity">{item['activity']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Habit tracker
+        st.markdown("""
+        <div class="suggestion-card">
+            <h4>📊 Weekly Habit Tracker</h4>
+            <p>Track these wellness habits throughout your week:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        habits = ["Morning sunlight", "Hydration (8 glasses)", "30-min exercise", 
+                 "Healthy meals", "Digital detox", "Quality sleep", "Mindfulness"]
+        
+        if 'habit_tracker' not in st.session_state:
+            st.session_state.habit_tracker = {habit: False for habit in habits}
+        
+        cols = st.columns(3)
+        for i, habit in enumerate(habits):
+            with cols[i%3]:
+                st.session_state.habit_tracker[habit] = st.checkbox(
+                    habit, 
+                    value=st.session_state.habit_tracker[habit],
+                    key=f"habit_{i}"
+                )
+    
+    with tab2:
+        st.subheader("Sleep Optimization")
+        
+        # Sleep quality assessment
+        with st.expander("🔍 Assess Your Sleep Quality"):
+            sleep_quality = st.slider("How would you rate your sleep quality?", 1, 5, 3)
+            sleep_duration = st.number_input("Average hours of sleep:", min_value=4, max_value=12, value=7)
+            sleep_issues = st.multiselect(
+                "Do you experience any of these?",
+                ["Difficulty falling asleep", "Waking up at night", "Not feeling rested", "Snoring"]
+            )
+            
+            if st.button("Get Sleep Recommendations"):
+                if sleep_quality <= 2 or sleep_duration < 6 or sleep_issues:
+                    st.warning("Your sleep needs improvement. Try these:")
+                    st.markdown("""
+                    - Maintain consistent sleep schedule
+                    - Avoid screens 1 hour before bed
+                    - Keep bedroom cool and dark
+                    - Limit caffeine after 2pm
+                    - Try relaxation techniques before bed
+                    """)
+                else:
+                    st.success("Your sleep habits look good! Keep it up.")
+        
+        # Sleep tracker visualization
+        st.markdown("""
+        <div class="suggestion-card">
+            <h4>📈 Your Sleep Patterns</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        sleep_data = pd.DataFrame({
+            "Day": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "Hours": [7, 6.5, 7.5, 6, 7, 8, 8.5],
+            "Quality": [3, 2, 4, 3, 3, 4, 5]
+        })
+        
+        chart = alt.Chart(sleep_data).mark_bar().encode(
+            x='Day',
+            y='Hours',
+            color=alt.condition(
+                alt.datum.Hours >= 7,
+                alt.value(accent_color),
+                alt.value(warning_color)
+        ).properties(width=600)
+        st.altair_chart(chart, use_container_width=True)
+    
+    with tab3:
+        st.subheader("Nutrition Guidance")
+        
+        # Personalized nutrition plan
+        st.markdown(f"""
+        <div class="suggestion-card">
+            <h4>🍽️ {name}'s Nutrition Plan</h4>
+            <p>Based on your age, gender and activity level:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if gender.lower() in ["female", "woman"]:
+            st.markdown("""
+            - **Breakfast:** Greek yogurt with berries and nuts
+            - **Lunch:** Salmon salad with leafy greens and quinoa
+            - **Dinner:** Grilled chicken with roasted vegetables
+            - **Snacks:** Hummus with veggies, hard-boiled eggs
+            - **Hydration:** 2L water + herbal teas
+            """)
+        else:
+            st.markdown("""
+            - **Breakfast:** Oatmeal with protein powder and banana
+            - **Lunch:** Chicken rice bowl with mixed vegetables
+            - **Dinner:** Lean beef with sweet potato and broccoli
+            - **Snacks:** Protein shake, mixed nuts
+            - **Hydration:** 3L water + green tea
+            """)
+        
+        # Meal planner
+        with st.expander("📅 Weekly Meal Planner"):
+            days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Weekend"]
+            meal_data = []
+            
+            for day in days:
+                cols = st.columns(3)
+                with cols[0]:
+                    breakfast = st.text_input(f"Breakfast - {day}", "Oatmeal with fruits")
+                with cols[1]:
+                    lunch = st.text_input(f"Lunch - {day}", "Grilled chicken salad")
+                with cols[2]:
+                    dinner = st.text_input(f"Dinner - {day}", "Fish with vegetables")
+                meal_data.append({"Day": day, "Breakfast": breakfast, "Lunch": lunch, "Dinner": dinner})
+            
+            if st.button("Save Meal Plan"):
+                st.session_state.meal_plan = meal_data
+                st.success("Meal plan saved!")
+    
+    with tab4:
+        st.subheader("Mindfulness & Stress Management")
+        
+        # Stress assessment
+        st.markdown("""
+        <div class="suggestion-card">
+            <h4>😌 Stress Level Assessment</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        stress_level = st.slider("Rate your current stress level (1-10)", 1, 10, 5)
+        
+        if stress_level >= 7:
+            st.warning("High stress detected. Try these techniques:")
+            st.markdown("""
+            - 5-minute box breathing exercise
+            - Progressive muscle relaxation
+            - Nature walk without devices
+            - Journaling for 10 minutes
+            - Guided meditation (try Headspace or Calm)
+            """)
+        else:
+            st.success("Your stress levels seem manageable. Maintenance tips:")
+            st.markdown("""
+            - Daily 5-minute mindfulness practice
+            - Gratitude journaling
+            - Regular exercise
+            - Social connections
+            - Hobby time
+            """)
+        
+        # Guided meditation player
+        st.markdown("""
+        <div class="suggestion-card">
+            <h4>🎧 Quick Meditation</h4>
+            <p>Take a 3-minute break with this breathing exercise:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        meditation_type = st.radio(
+            "Choose meditation type:",
+            ["Box Breathing", "Body Scan", "Mindfulness", "Loving-Kindness"],
+            horizontal=True
+        )
+        
+        if st.button("Start Guided Meditation"):
+            st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")  # Placeholder
+            
+            with st.expander("Meditation Instructions"):
+                if meditation_type == "Box Breathing":
+                    st.write("""
+                    1. Inhale for 4 seconds
+                    2. Hold for 4 seconds
+                    3. Exhale for 4 seconds
+                    4. Hold for 4 seconds
+                    5. Repeat for 3 minutes
+                    """)
+                elif meditation_type == "Body Scan":
+                    st.write("""
+                    1. Focus on your toes, notice sensations
+                    2. Slowly move attention up through your body
+                    3. Notice areas of tension without judgment
+                    4. Breathe into tense areas
+                    """)
+    
+    # Progress tracking
+    st.markdown("""
+    <div class="suggestion-card">
+        <h4>📊 Your Wellness Progress</h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    progress_cols = st.columns(3)
+    with progress_cols[0]:
+        st.metric("Current Streak", "5 days", "2 days")
+    with progress_cols[1]:
+        st.metric("Weekly Goals", "3/7 completed")
+    with progress_cols[2]:
+        st.metric("Improvement", "+12%", "4% from last week")
     
     # Navigation buttons
     col1, col2 = st.columns(2)
@@ -528,7 +725,6 @@ elif st.session_state.page == "Wellness Guide":
         if st.button("💌 Give Feedback", use_container_width=True):
             st.session_state.page = "📝 Feedback"
             st.rerun()
-
 
 # ========= Page 4: Feedback ========
 elif st.session_state.page == "📝 Feedback":
