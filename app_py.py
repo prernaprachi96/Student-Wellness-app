@@ -583,7 +583,7 @@ elif st.session_state.page == "Wellness Guide":
             color=alt.condition(
                 alt.datum.Hours >= 7,
                 alt.value(accent_color),
-                alt.value(warning_color)
+                alt.value(warning_color))
         ).properties(width=600)
         st.altair_chart(chart, use_container_width=True)
     
