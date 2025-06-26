@@ -714,113 +714,200 @@ elif st.session_state.page == "🌿 Wellness Guide":
         if st.button("💬 Chat with Terra", use_container_width=True):
             st.session_state.page = "💬 Terra Chat"
             st.rerun()
-# ========= Page 4: Terra Q&A ========
+
+# ========= Page 4: Wellness Resources ========
 elif st.session_state.page == "💬 Terra Chat":
-    st.title("🌿 Wellness Guide")
+    st.title("🌿 Personalized Wellness Resources")
     
-    # Gender toggle
-    cols = st.columns(2)
-    with cols[0]:
-        if st.button("🌸 For Her", use_container_width=True, 
-                   type="primary" if st.session_state.chat_gender == "female" else "secondary"):
-            st.session_state.chat_gender = "female"
-    with cols[1]:
-        if st.button("🌱 For Him", use_container_width=True, 
-                   type="primary" if st.session_state.chat_gender == "male" else "secondary"):
-            st.session_state.chat_gender = "male"
+    # Get user data from mood check
+    mood = st.session_state.mood_data.get("mood", "Balanced 🌿")
+    risk = st.session_state.mood_data.get("risk", "Moderate")
+    mood_score = st.session_state.mood_data.get("mood_score", 0.5)
+    gender = st.session_state.get("gender", "Prefer not to say")
     
-    # Show appropriate content based on gender
-    if st.session_state.chat_gender == "female":
+    # Display user's current status
+    st.markdown(f"""
+    <div class="result-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4>Your Current Status</h4>
+                <p>Mood: <strong>{mood}</strong></p>
+                <p>Wellness Score: <strong>{mood_score:.2f}/1.0</strong></p>
+            </div>
+            <div>
+                <p>Burnout Risk: <strong>{risk}</strong></p>
+                <p>Gender: <strong>{gender}</strong></p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ===== Personalized Wellness Guide =====
+    st.markdown("## 🌱 Personalized Wellness Guide")
+    
+    if risk == "High":
         st.markdown(f"""
-        <div class="result-card">
-            <p>Hello {st.session_state.get('name', 'friend')}! Explore wellness topics that matter to you.</p>
+        <div class="warning-card">
+            <h3>Recovery Focus</h3>
+            <p>Your responses indicate you may be experiencing significant stress. Here's your customized recovery plan:</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Menstrual cycle phase selector
-        cycle_phase = st.selectbox(
-            "Select your menstrual cycle phase (optional)",
-            ["Not applicable", "Menstruation (Days 1-5)", "Follicular (Days 6-14)", 
-             "Ovulation (Days 15-17)", "Luteal (Days 18-28)"],
-            index=0
-        )
+        recovery_plan = [
+            "🧠 **Mental Reset**: Practice 5-10 minutes of guided meditation daily",
+            "💤 **Sleep Restoration**: Aim for 7-9 hours with consistent bedtime",
+            "🍵 **Nourishment**: Focus on anti-inflammatory foods (leafy greens, berries, nuts)",
+            "🚶 **Gentle Movement**: 20-30 minute walks in nature, no intense workouts",
+            "📵 **Digital Boundaries**: Set screen time limits, especially before bed"
+        ]
         
-        # Common questions and answers for women
-        questions_answers = {
-            "General": [
-                {
-                    "q": "How can I boost my energy naturally during the day?",
-                    "a": "Like sunlight nourishes plants, try these energy boosters:\n1. Start with a protein-rich breakfast\n2. Take short movement breaks every hour\n3. Stay hydrated with water and herbal teas\n4. Get 10 minutes of morning sunlight"
-                },
-                {
-                    "q": "What are quick stress-relief techniques for work?",
-                    "a": "As gentle as a breeze through leaves:\n1. 4-7-8 breathing (inhale 4s, hold 7s, exhale 8s)\n2. Desk stretches every hour\n3. Sip chamomile or peppermint tea\n4. Listen to nature sounds for 2 minutes"
-                }
-            ],
-            "Nutrition": [
-                {
-                    "q": "What foods help with hormonal balance?",
-                    "a": "Nature's hormonal helpers:\n• Leafy greens (kale, spinach)\n• Omega-3s (salmon, flaxseeds)\n• Cruciferous veggies (broccoli, cauliflower)\n• Berries (antioxidant-rich)\n• Nuts and seeds (especially walnuts and pumpkin seeds)"
-                }
-            ],
-            "Cycle Health": [
-                {
-                    "q": "How can I support my body during this phase?",
-                    "a": "During your period:\n1. Prioritize iron-rich foods\n2. Use heat therapy for cramps\n3. Try gentle yoga or walking\n4. Allow extra rest when needed" 
-                    if cycle_phase == "Menstruation (Days 1-5)" else
-                    "During ovulation:\n1. Focus on fiber-rich foods\n2. Engage in strength training\n3. Stay well hydrated\n4. Protect your skin from sun exposure"
-                }
-            ]
-        }
-        
-    else:  # Male content
+        for item in recovery_plan:
+            st.markdown(f"""
+            <div class="routine-item">
+                <div class="routine-activity">{item}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    elif risk == "Moderate":
         st.markdown(f"""
-        <div class="result-card">
-            <p>Hello {st.session_state.get('name', 'friend')}! Explore wellness topics that matter to you.</p>
+        <div class="suggestion-card">
+            <h3>Balance Maintenance</h3>
+            <p>You're doing okay but could use some tuning. Here's your wellness tune-up:</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Common questions and answers for men
-        questions_answers = {
-            "General": [
-                {
-                    "q": "How can I improve focus naturally?",
-                    "a": "Sharpen your mind like a well-honed tool:\n1. Try the Pomodoro technique (25min work/5min break)\n2. Eliminate distractions during deep work\n3. Stay hydrated - even mild dehydration affects focus\n4. Take short walks to reset your attention"
-                }
-            ],
-            "Fitness": [
-                {
-                    "q": "How often should I take rest days?",
-                    "a": "Like fields need fallow seasons:\n• Beginners: 2-3 rest days/week\n• Intermediate: 1-2 rest days/week\n• Advanced: 1 rest day/week (active recovery on some days)\nListen to your body - more rest when sore or fatigued"
-                }
-            ]
-        }
+        balance_plan = [
+            "🌅 **Morning Routine**: Start with sunlight exposure + hydration",
+            "🍎 **Nutrition**: Ensure protein with each meal, reduce processed sugars",
+            "🧘 **Mindfulness**: Try 3-minute breathing breaks 2x/day",
+            "🏃 **Movement**: 30 minutes activity daily (walking counts!)",
+            "💤 **Sleep**: Maintain consistent sleep-wake times"
+        ]
+        
+        for item in balance_plan:
+            st.markdown(f"""
+            <div class="routine-item">
+                <div class="routine-activity">{item}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    else:  # Low risk
+        st.markdown(f"""
+        <div class="suggestion-card">
+            <h3>Thriving & Growth</h3>
+            <p>You're doing great! Here's how to maintain and enhance your wellness:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        growth_plan = [
+            "🌱 **New Challenges**: Try a new wellness practice (cold exposure, breathwork)",
+            "📚 **Learning**: Explore a book/podcast on personal growth",
+            "🤝 **Connection**: Nurture important relationships",
+            "🌍 **Nature**: Spend extra time outdoors this week",
+            "🙏 **Gratitude**: Keep a daily gratitude journal"
+        ]
+        
+        for item in growth_plan:
+            st.markdown(f"""
+            <div class="routine-item">
+                <div class="routine-activity">{item}</div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    # Display questions by category
-    tabs = st.tabs(list(questions_answers.keys()))
+    # ===== Sample Balanced Day =====
+    st.markdown("## ⏰ Sample Balanced Day")
     
-    for tab, category in zip(tabs, questions_answers.keys()):
-        with tab:
-            for qa in questions_answers[category]:
-                with st.expander(qa["q"]):
-                    st.markdown(f"""
-                    <div style="padding:12px; border-radius:8px; background-color:{card_bg};">
-                        {qa["a"].replace('\n', '<br>')}
-                    </div>
-                    """, unsafe_allow_html=True)
+    if risk == "High":
+        st.markdown(f"""
+        <div class="warning-card">
+            <h4>Gentle Recovery Day</h4>
+            <p>This sample day is designed to help you recover without overwhelm:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        recovery_day = [
+            {"time": "7:30 AM", "activity": "🌅 Gentle wake-up, no alarm if possible"},
+            {"time": "8:00 AM", "activity": "🍵 Herbal tea + light stretching"},
+            {"time": "9:00 AM", "activity": "📝 Journal 3 things you're grateful for"},
+            {"time": "12:00 PM", "activity": "🥗 Nourishing lunch away from screens"},
+            {"time": "3:00 PM", "activity": "🚶‍♀️ 15-min nature walk (even just outside)"},
+            {"time": "6:30 PM", "activity": "🍲 Light, easy-to-digest dinner"},
+            {"time": "8:00 PM", "activity": "📖 Relaxing activity (reading, music)"},
+            {"time": "9:30 PM", "activity": "🛀 Warm bath or shower before bed"}
+        ]
+        
+    elif risk == "Moderate":
+        st.markdown(f"""
+        <div class="suggestion-card">
+            <h4>Balanced Routine Day</h4>
+            <p>A sustainable day that balances activity and recovery:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        recovery_day = [
+            {"time": "7:00 AM", "activity": "🌞 Morning sunlight + glass of water"},
+            {"time": "7:30 AM", "activity": "🧘 10-min yoga or stretching"},
+            {"time": "8:30 AM", "activity": "🍳 Protein-rich breakfast"},
+            {"time": "12:30 PM", "activity": "🥙 Balanced lunch with veggies"},
+            {"time": "3:00 PM", "activity": "🚶‍♂️ 20-min walk (outside if possible)"},
+            {"time": "6:00 PM", "activity": "🍗 Dinner with lean protein"},
+            {"time": "8:00 PM", "activity": "📱 Begin screen wind-down"},
+            {"time": "10:00 PM", "activity": "😴 Bedtime (aim for 7-8 hours sleep)"}
+        ]
+        
+    else:  # Low risk
+        st.markdown(f"""
+        <div class="suggestion-card">
+            <h4>Optimal Wellness Day</h4>
+            <p>A day designed to maximize your already great wellness:</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        recovery_day = [
+            {"time": "6:30 AM", "activity": "🌅 Early wake-up + sunlight exposure"},
+            {"time": "7:00 AM", "activity": "🏋️‍♀️ Morning workout or movement"},
+            {"time": "8:00 AM", "activity": "🍓 Nutrient-dense breakfast"},
+            {"time": "12:00 PM", "activity": "🥗 Power lunch with varied colors"},
+            {"time": "2:00 PM", "activity": "🧠 Focused deep work session"},
+            {"time": "5:00 PM", "activity": "🚴‍♂️ Active commute or exercise"},
+            {"time": "7:00 PM", "activity": "🍽️ Mindful, relaxed dinner"},
+            {"time": "9:00 PM", "activity": "📚 Learning or creative time"},
+            {"time": "10:30 PM", "activity": "😴 Wind down for quality sleep"}
+        ]
+    
+    # Display the sample day
+    for item in recovery_day:
+        st.markdown(f"""
+        <div class="routine-item">
+            <div class="routine-time">{item['time']}</div>
+            <div class="routine-activity">{item['activity']}</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Quick tips section
     st.markdown("""
     <div class="suggestion-card">
         <h4>💡 Quick Wellness Tips</h4>
         <ul>
-            <li>Drink water first thing in the morning</li>
-            <li>Take 5 deep breaths before meals</li>
-            <li>Stand up and stretch every hour</li>
-            <li>Write down 3 good things before bed</li>
+            <li>Set phone to grayscale mode in evenings</li>
+            <li>Try "5-4-3-2-1" grounding technique when stressed</li>
+            <li>Add leafy greens to one meal daily</li>
+            <li>Practice 2-minute breathing breaks</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Navigation buttons
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔙 Back to Mood Check", use_container_width=True):
+            st.session_state.page = "📊 Mood Check"
+            st.rerun()
+    with col2:
+        if st.button("🌿 View Full Guide", use_container_width=True):
+            st.session_state.page = "🌿 Wellness Guide"
+            st.rerun()
+
 
 # ========= Page 5: Feedback ========
 elif st.session_state.page == "📝 Feedback":
