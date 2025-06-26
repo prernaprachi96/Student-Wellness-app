@@ -714,7 +714,6 @@ elif st.session_state.page == "🌿 Wellness Guide":
         if st.button("💬 Chat with Terra", use_container_width=True):
             st.session_state.page = "💬 Terra Chat"
             st.rerun()
-
 # ========= Page 4: Wellness Resources ========
 elif st.session_state.page == "💬 Terra Chat":
     st.title("🌿 Personalized Wellness Resources")
@@ -897,18 +896,10 @@ elif st.session_state.page == "💬 Terra Chat":
     </div>
     """, unsafe_allow_html=True)
     
-    # Navigation buttons
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔙 Back to Mood Check", use_container_width=True):
-            st.session_state.page = "📊 Mood Check"
-            st.rerun()
-    with col2:
-        if st.button("🌿 View Full Guide", use_container_width=True):
-            st.session_state.page = "🌿 Wellness Guide"
-            st.rerun()
-
-
+    # Single back button for navigation
+    if st.button("🔙 Back to Main Menu", use_container_width=True):
+        st.session_state.page = "🌱 Welcome"
+        st.rerun()
 # ========= Page 5: Feedback ========
 elif st.session_state.page == "📝 Feedback":
     st.title("💌 Share Your Thoughts")
