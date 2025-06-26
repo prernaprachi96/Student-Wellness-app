@@ -395,15 +395,15 @@ elif st.session_state.page == "📊 Mood Check":
                     
                     # Determine mood and risk level
                     if mood_score > 0.4:
-                        mood = "Thriving 🌸"
+                        mood = "Blooming"
                         risk = "Low"
                         mood_color = accent_color
                     elif mood_score > 0.1:
-                        mood = "Balanced 🌿"
+                        mood = "Balanced(Work on youself dude!)"
                         risk = "Moderate"
                         mood_color = "#FFC107"  # Yellow
                     else:
-                        mood = "Needs Care 🍂"
+                        mood = "Needs Care"
                         risk = "High"
                         mood_color = warning_color
                     
@@ -427,8 +427,8 @@ elif st.session_state.page == "📊 Mood Check":
                     st.warning("Please share how you're feeling to get your mood analysis")
 
 # ========= Page 3: Wellness Guide ========
-elif st.session_state.page == "🌿 Wellness Guide":
-    st.title("🌱 Personalized Wellness Guide")
+elif st.session_state.page == "Wellness Guide":
+    st.title("Personalized Wellness Guide")
     
     # Get user data from session state with proper defaults
     name = st.session_state.get("name", "friend")
@@ -444,7 +444,7 @@ elif st.session_state.page == "🌿 Wellness Guide":
     if risk == "High" and "quiz_complete" not in st.session_state:
         st.markdown(f"""
         <div class="warning-card">
-            <h3>🌻 Wellness Check-In Quiz</h3>
+            <h3>Wellness Check-In Quiz</h3>
             <p>Let's understand what areas need attention, {name}.</p>
         </div>
         """, unsafe_allow_html=True)
